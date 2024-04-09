@@ -1,6 +1,6 @@
 {
   "name": "@kne/react-form",
-  "version": "3.0.0-beta.1",
+  "version": "3.0.0-beta.2",
   "description": "用于表单的校验",
   "syntax": {
     "esmodules": true
@@ -38,8 +38,7 @@
     ]
   },
   "files": [
-    "index.js",
-    "libs"
+    "dist"
   ],
   "repository": {
     "type": "git",
