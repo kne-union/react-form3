@@ -1,0 +1,60 @@
+{
+  "isFull": false,
+  "list": [
+    {
+      "title": "基本示例",
+      "description": "简单的form到input组件的绑定",
+      "code": "./base.js",
+      "scope": [
+        {
+          "name": "_ReactForm",
+          "packageName": "@kne/current-lib"
+        }
+      ]
+    },
+    {
+      "title": "openApi",
+      "description": "展示openApi的使用",
+      "code": "./open-api.js",
+      "scope": [
+        {
+          "name": "_ReactForm",
+          "packageName": "@kne/current-lib"
+        },
+        {
+          "name": "antd",
+          "packageName": "antd"
+        }
+      ]
+    },
+    {
+      "title": "group",
+      "description": "展示group的使用",
+      "code": "./group.js",
+      "scope": [
+        {
+          "name": "_ReactForm",
+          "packageName": "@kne/current-lib"
+        },
+        {
+          "name": "antd",
+          "packageName": "antd"
+        }
+      ]
+    },{
+      "title": "associations",
+      "description": "字段关联关系",
+      "code": "./associations.js",
+      "scope": [
+        {
+          "name": "_ReactForm",
+          "packageName": "@kne/current-lib"
+        },
+        {
+          "name": "antd",
+          "packageName": "antd"
+        }
+      ]
+    }
+  ]
+}
