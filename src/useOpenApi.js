@@ -60,18 +60,11 @@ const useOpenApi = ({ formState, emitter }) => {
           validate
         });
       },
-      setField({ name, value, groupName, groupIndex, validate }, options) {
-        emitter.emit(
-          'form-data-set-field',
-          {
-            name,
-            groupName,
-            groupIndex,
-            value,
-            validate
-          },
-          options
-        );
+      setField(list, options) {
+        emitter.emit('form-data-set-field', list, options);
+      },
+      setFields(list, options) {
+        emitter.emit('form-data-set-field', list, options);
       },
       setFieldValue({ name, groupName, groupIndex, validate }, value, options) {
         emitter.emit(
@@ -85,9 +78,6 @@ const useOpenApi = ({ formState, emitter }) => {
           },
           options
         );
-      },
-      setFields(list, options) {
-        emitter.emit('form-data-set-field', list, options);
       }
     };
   }, [formState, emitter]);
