@@ -211,6 +211,9 @@ class Field {
   }
 
   setValue(value) {
+    if (this.value === value) {
+      return this;
+    }
     this.value = value;
     this.validate = { status: FORM_FIELD_VALIDATE_STATE_ENUM.INIT };
     setTimeout(() => {
