@@ -121,7 +121,8 @@ const GroupList = forwardRef(({ name, defaultLength, empty, reverseOrder, childr
 });
 
 GroupList.defaultProps = {
-  reverseOrder: true
+  reverseOrder: true,
+  defaultLength: 1
 };
 
 export default GroupList;
