@@ -70,12 +70,12 @@ const BaseExample = () => {
         }}>倒序添加
         </button>
       </div>
-      <GroupList ref={ref} name="group" defaultLength={2}>{({ index, onRemove }) => {
+      <GroupList ref={ref} name="group">{({ index, onRemove }) => {
         return <div>
           <div>第{index + 1}项</div>
           <Input name="name" label="名称" rule="REQ LEN-0-10" />
           <Input name="des" label="描述" rule="LEN-0-10" />
-          <GroupList name="inner" defaultLength={2}>{({ index, onRemove }) => {
+          <GroupList name="inner">{({ index, onRemove }) => {
             return <div style={{
               padding: '10px', background: '#eee'
             }}>

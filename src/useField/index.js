@@ -38,6 +38,7 @@ const useField = ({ name, rule, label, interceptor, associations, noTrim, deboun
     id,
     name,
     label,
+    value: void 0,
     fieldRef,
     formData,
     formState,
