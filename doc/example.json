@@ -28,6 +28,21 @@
       ]
     },
     {
+      "title": "use-form-api",
+      "description": "展示useFormApi的使用",
+      "code": "./use-form-api.js",
+      "scope": [
+        {
+          "name": "_ReactForm",
+          "packageName": "@kne/current-lib"
+        },
+        {
+          "name": "antd",
+          "packageName": "antd"
+        }
+      ]
+    },
+    {
       "title": "group",
       "description": "展示group的使用",
       "code": "./group.js",
@@ -41,7 +56,8 @@
           "packageName": "antd"
         }
       ]
-    },{
+    },
+    {
       "title": "associations",
       "description": "字段关联关系",
       "code": "./associations.js",
