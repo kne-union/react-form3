@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react';
+import getIdlePromise from './core/getIdlePromise';
 
 export const FORM_TASK_STATE_ENUM = {
   PENDING: 'PENDING',
@@ -39,11 +40,7 @@ class TaskList {
 
   async append(id, runner) {
     const task = new Task({ id, runner });
-    const currentTask = this.list.get(id);
-    if (currentTask) {
-      currentTask.cancel();
-      this.list.delete(id);
-    }
+    this.expire(id);
     this.list.set(id, task);
     task.target.then(() => {
       this.list.delete(id);
@@ -51,6 +48,15 @@ class TaskList {
     });
     this.onChange();
     return task.target;
+  }
+
+  expire(id) {
+    const currentTask = this.list.get(id);
+    if (currentTask) {
+      currentTask.cancel();
+      this.list.delete(id);
+    }
+    return this;
   }
 }
 
@@ -68,14 +74,13 @@ const useFormTask = () => {
     append: (id, runner) => {
       return taskRef.current.append(id, runner);
     },
+    expire: id => {
+      return taskRef.current.expire(id);
+    },
     get target() {
-      return Promise.all(Array.from(taskRef.current.list.values()).map(task => task.target)).then(() => {
-        return new Promise(resolve =>
-          setTimeout(() => {
-            resolve();
-          }, 0)
-        );
-      });
+      return getIdlePromise()
+        .then(Promise.all(Array.from(taskRef.current.list.values()).map(task => task.target)))
+        .then(getIdlePromise);
     }
   };
 };

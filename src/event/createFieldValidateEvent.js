@@ -1,16 +1,24 @@
 import Field, { FORM_FIELD_VALIDATE_STATE_ENUM } from '../core/Field';
+import getIdlePromise from '../core/getIdlePromise';
 
 const createFieldValidateEvent =
   loadContext =>
   async ({ id, name, groupName, groupIndex }) => {
+    await getIdlePromise();
     const { formState, setFormState, task, emitter, props } = loadContext();
     const field = Field.findField(formState, { id, name, groupName, groupIndex });
+
     if (!field) {
       return;
     }
 
     const setFieldInfo = field => {
-      loadContext().formState[field.id] && setFormState(formState => Object.assign({}, formState, { [field.id]: field }));
+      setFormState(formState => {
+        if (!formState[field.id]) {
+          return formState;
+        }
+        return Object.assign({}, formState, { [field.id]: field });
+      });
     };
 
     const newField = field.clone();

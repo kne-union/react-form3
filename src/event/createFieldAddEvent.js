@@ -1,7 +1,7 @@
 import Field from '../core/Field';
 
 const createFieldAddEvent = loadContext => options => {
-  const { setFormState, interceptor, emitter } = loadContext();
+  const { setFormState, interceptor, task, emitter } = loadContext();
   const { id, name, associations } = options;
   const field = new Field({
     id,
@@ -10,6 +10,7 @@ const createFieldAddEvent = loadContext => options => {
     associations,
     options: {
       onValueChange: field => {
+        task.expire(field.id);
         emitter.emit('form-field-value-change', { target: field });
       }
     }

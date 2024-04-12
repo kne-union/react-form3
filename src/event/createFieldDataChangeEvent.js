@@ -1,14 +1,13 @@
 const createFieldDataChangeEvent =
   loadContext =>
   ({ id, value }) => {
-    const { setFormState, formState } = loadContext();
+    const { setFormState, formState, task } = loadContext();
     if (!formState[id]) {
       return;
     }
     const field = formState[id].clone();
     field.setValue(value);
-
-    setFormState(Object.assign({}, formState, { [field.id]: field }));
+    setFormState(formState => Object.assign({}, formState, { [field.id]: field }));
   };
 
 export default createFieldDataChangeEvent;
