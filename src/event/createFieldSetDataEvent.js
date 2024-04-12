@@ -12,18 +12,21 @@ const createFieldSetDataEvent = loadContext => (data, options) => {
 
   const validateFieldIdList = [];
 
-  const newFormState = Object.assign({}, formState);
+  const newFormState = {};
 
   data.forEach(item => {
     const { name, groupName, groupIndex, value, validate } = Object.assign({}, item);
 
-    const field = Field.findField(newFormState, { name, groupName, groupIndex });
+    const field = Field.findField(formState, { name, groupName, groupIndex });
 
     const setFieldData = (field, value) => {
+      const newField = field.clone();
       if (item.hasOwnProperty('value')) {
-        newFormState[field.id] = field.clone().setFieldValue(value);
+        newField.setFieldValue(value);
       }
-      validate ? newFormState[field.id].setValidateStatus(validate) : validateFieldIdList.push(field.id);
+      validate ? newField.setValidateStatus(validate) : validateFieldIdList.push(field.id);
+
+      newFormState[newField.id] = newField;
     };
 
     (() => {
@@ -33,27 +36,25 @@ const createFieldSetDataEvent = loadContext => (data, options) => {
       }
 
       if (groupName && isNil(name)) {
-        Field.matchFields(newFormState, { groupName, groupIndex }).forEach(field => {
+        Field.matchFields(formState, { groupName, groupIndex }).forEach(field => {
           setFieldData(field, get(value, field.name));
         });
         return true;
       }
 
       if (groupName && isNil(groupIndex)) {
-        Field.matchFields(newFormState, { groupName, name }).forEach(field => {
+        Field.matchFields(formState, { groupName, name }).forEach(field => {
           setFieldData(field, value);
         });
         return true;
       }
     })();
 
-    setFormState(newFormState);
-    setTimeout(() => {
-      runValidate &&
-        validateFieldIdList.forEach(id => {
-          emitter.emit('form-field-validate', { id });
-        });
-    }, 0);
+    setFormState(formState => Object.assign({}, formState, newFormState));
+    runValidate &&
+      validateFieldIdList.forEach(id => {
+        emitter.emit('form-field-validate', { id });
+      });
   });
 };
 

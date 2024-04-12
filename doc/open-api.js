@@ -48,7 +48,7 @@ const BaseExample = () => {
         });
       }}>设置校验信息</Button>
     </Space>
-    <ReactForm ref={formApiRef}>
+    <ReactForm ref={formApiRef} debug>
       <Input name="name" label="名称" rule="REQ LEN-0-10" />
       <Input name="name2" label="名称2" rule="REQ LEN-0-10" />
       <Input name="name3" label="名称3" rule="REQ LEN-0-10" />

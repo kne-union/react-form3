@@ -19,12 +19,10 @@ const createFormSetDataEvent =
         {}
       );
       props.setInitData(newInitData);
-      setTimeout(() => {
-        runValidate &&
-          Object.values(formState).forEach(field => {
-            emitter.emit('form-field-validate', { id: field.id });
-          });
-      }, 0);
+      runValidate &&
+        Object.values(formState).forEach(field => {
+          emitter.emit('form-field-validate', { id: field.id });
+        });
       return newState;
     });
   };
