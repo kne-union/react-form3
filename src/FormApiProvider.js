@@ -32,6 +32,7 @@ export const useFormApi = () => {
 
 const FormApiProvider = ({ openApi, children }) => {
   const openApiRef = useRef(openApi);
+  openApiRef.current = openApi;
   return <Provider value={{ openApiRef }}>{children}</Provider>;
 };
 
