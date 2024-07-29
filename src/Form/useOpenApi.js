@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import Field from './core/Field';
+import Field from '../core/Field';
 
 const useOpenApi = ({ formState, emitter }) => {
   return useMemo(() => {
@@ -18,13 +18,13 @@ const useOpenApi = ({ formState, emitter }) => {
         return Field.computedFormDataFormState(formState);
       },
       set data(data) {
-        emitter.emit('form-data-set', { data });
+        emitter.emit('form:data-set', { data });
       },
       get errors() {
         return Field.stateToError(formState);
       },
       reset() {
-        emitter.emit('form-data-reset');
+        emitter.emit('form:data-reset');
       },
       onReady(callback) {
         emitter.addListener('form-mount', () => {
@@ -32,18 +32,18 @@ const useOpenApi = ({ formState, emitter }) => {
         });
       },
       onDestroy(callback) {
-        emitter.addListener('form-unmount', () => {
+        emitter.addListener('form:unmount', () => {
           callback && callback();
         });
       },
       validateField({ name, groupName, groupIndex }) {
-        emitter.emit('form-field-validate', { name, groupName, groupIndex });
+        emitter.emit('form-field:validate', { name, groupName, groupIndex });
       },
       validateAll() {
-        emitter.emit('form-validate-all');
+        emitter.emit('form:validate');
       },
       setFormData: (data, runValidate = true) => {
-        emitter.emit('form-data-set', { data, runValidate });
+        emitter.emit('form:data-set', { data, runValidate });
       },
       getFormData() {
         return Field.computedFormDataFormState(formState);

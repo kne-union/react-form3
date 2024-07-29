@@ -1,6 +1,6 @@
 {
-  "name": "@kne/react-form",
-  "version": "3.0.0",
+  "name": "@kne/react-form3",
+  "version": "0.1.0",
   "description": "用于表单的校验",
   "syntax": {
     "esmodules": true

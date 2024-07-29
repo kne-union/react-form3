@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import getIdlePromise from './core/getIdlePromise';
+import getIdlePromise from '../core/getIdlePromise';
 
 export const FORM_TASK_STATE_ENUM = {
   PENDING: 'PENDING',

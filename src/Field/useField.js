@@ -6,7 +6,7 @@ import useValidate from './useValidate';
 import useFieldDataChange from './useFieldDataChange';
 import get from 'lodash/get';
 
-const useField = ({ name, rule, label, interceptor, associations, noTrim, debounce: time = 0, onChange, value, errMsg, ...args }) => {
+const useField = ({ name, rule, label, interceptor, associations, noTrim, debounce: time = 0, onChange, defaultValue, errMsg, ...args }) => {
   const id = useId();
   const { index: groupIndex, name: groupName } = useGroup();
   const { formState, formData } = useFormContext();
@@ -24,12 +24,13 @@ const useField = ({ name, rule, label, interceptor, associations, noTrim, deboun
       }
     },
     noTrim,
-    value,
+    defaultValue,
     id,
     groupName,
     groupIndex,
     errMsg
   });
+
   const validate = useValidate({ id, time });
   const { isValueChanged, onChange: dataChange } = useFieldDataChange({ id, onChange });
   const field = formState[id];

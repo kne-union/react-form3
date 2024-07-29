@@ -1,4 +1,4 @@
-import { runInterceptors } from './core/interceptors';
+import { runInterceptors } from '../core/interceptors';
 import useRefCallback from '@kne/use-ref-callback';
 
 const useInterceptors = ({ interceptors }) => {
