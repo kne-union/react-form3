@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
-import { useFormContext } from './context';
+import { useFormContext } from './formContext';
+import getIdlePromise from './core/getIdlePromise';
 
 const useSubmit = props => {
   const [isLoading, setIsLoading] = useState(false);
@@ -17,18 +18,16 @@ const useSubmit = props => {
     isLoading,
     isPass,
     onClick: useCallback(
-      (...args) => {
+      async (...args) => {
         setIsLoading(true);
-        setTimeout(() => {
-          Promise.resolve(onClick && onClick(...args)).then(
-            returnArgs => {
-              emitter.emit('form-submit', returnArgs || args);
-            },
-            () => {
-              setIsLoading(false);
-            }
-          );
-        }, 0);
+        try {
+          await getIdlePromise();
+          const returnArgs = onClick && (await onClick(...args));
+          emitter.emit('form:submit', returnArgs || args);
+        } catch (e) {
+          console.error(e);
+        }
+        setIsLoading(false);
       },
       [emitter, setIsLoading]
     )

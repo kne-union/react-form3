@@ -4,7 +4,6 @@ const { Button, Space } = antd;
 
 const Input = props => {
   const fieldProps = useField(props);
-
   return (<div>
     {fieldProps.label}
     <input ref={fieldProps.fieldRef} type="text" value={fieldProps.value || ''} onChange={fieldProps.onChange}

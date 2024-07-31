@@ -1,15 +1,15 @@
 import React, { useMemo } from 'react';
 import { Provider, useGroupContext } from './context';
-import { useFormContext } from '../context';
+import { useFormContext } from '../formContext';
 import groupKey from '../core/groupKey';
 import get from 'lodash/get';
 
-const Group = ({ id, name, children }) => {
+const Group = ({ id, name, children, defaultValue }) => {
   const { group } = useFormContext();
   const { id: parentId, index: parentIndex, name: parentName } = useGroupContext();
 
   const index = useMemo(() => {
-    return get(group, groupKey(parentId, name), []).indexOf(id);
+    return get(group, groupKey(parentId, name), []).findIndex(item => item.id === id);
   }, [id, parentId, group, name]);
 
   const groupName = useMemo(() => {
@@ -20,7 +20,7 @@ const Group = ({ id, name, children }) => {
   }, [parentName, name, index, parentIndex]);
 
   return (
-    <Provider value={{ id, name: groupName, group, index }}>
+    <Provider value={{ id, name: groupName, group, index, defaultValue }}>
       {children({
         id,
         name: groupName,

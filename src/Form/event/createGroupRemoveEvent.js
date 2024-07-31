@@ -1,10 +1,9 @@
-import groupKey from '../core/groupKey';
+import groupKey from '../../core/groupKey';
 
 const createGroupRemoveEvent =
-  loadContext =>
+  formContextRef =>
   ({ parentId, name }) => {
-    const { setGroup } = loadContext();
-
+    const { setGroup } = formContextRef.current;
     setGroup(group => {
       const newGroup = Object.assign({}, group);
       const key = groupKey(parentId, name);

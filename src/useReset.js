@@ -1,11 +1,11 @@
 import { useCallback } from 'react';
-import { useFormContext } from './context';
+import { useFormContext } from './formContext';
 
 const useReset = () => {
   const { emitter } = useFormContext();
   return {
     onClick: useCallback(() => {
-      emitter.emit('form-data-reset');
+      emitter.emit('form:reset');
     }, [emitter])
   };
 };

@@ -1,7 +1,7 @@
 import { filterEmpty, isEmpty, isNotEmpty } from './core/empty';
 import compileErrMsg from './core/compileErrMsg';
 import Field from './core/Field';
-import { useFormApi } from './FormApiProvider';
+import { useFormApi } from './Form/FormApiProvider';
 
 const stateToIsPass = Field.stateToIsPass,
   stateToError = Field.stateToError,
@@ -25,7 +25,7 @@ export {
   useFormApi, // 此处为兼容老版本操作，请尽量使用useFormApi
   useFormApi as useFormContext
 };
-export { default as useField } from './useField';
+export { default as useField } from './Field/useField';
 export { GroupList } from './Group';
 export { presetRules as preset, default as RULES } from './core/RULES';
 export { default as interceptors } from './core/interceptors';

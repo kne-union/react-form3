@@ -1,5 +1,5 @@
 import React, { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
-import { useFormContext } from '../context';
+import { useFormContext } from '../formContext';
 import { useGroupContext } from './context';
 import useRefCallback from '@kne/use-ref-callback';
 import get from 'lodash/get';
@@ -7,12 +7,11 @@ import range from 'lodash/range';
 import Group from './Group';
 import uniqueId from 'lodash/uniqueId';
 
-const GroupList = forwardRef(({ name, defaultLength, empty, reverseOrder, children }, ref) => {
+const GroupList = forwardRef(({ name, defaultLength = 1, empty, reverseOrder = true, children }, ref) => {
   const [list, setList] = useState([]);
   const listRef = useRef(list);
   listRef.current = list;
-  const { props, emitter } = useFormContext();
-  const initData = props.initData;
+  const { initFormData: initData, emitter } = useFormContext();
   const { id: parentId, name: parentName, index: parentIndex } = useGroupContext();
 
   const groupName = useMemo(() => {
@@ -24,7 +23,7 @@ const GroupList = forwardRef(({ name, defaultLength, empty, reverseOrder, childr
 
   const targetPath = groupName ? `${groupName}.${name}` : name;
 
-  const itemIdGenerator = () => (parentId ? uniqueId(parentId + '-') : uniqueId());
+  const itemIdGenerator = item => Object.assign({}, item, { id: parentId ? uniqueId(parentId + '-') : uniqueId() });
 
   const bindEvent = useRefCallback(({ groupName, name }) => {
     const setListFromFormData = value => {
@@ -36,7 +35,7 @@ const GroupList = forwardRef(({ name, defaultLength, empty, reverseOrder, childr
         }
         if (Array.isArray(value)) {
           return value.map((item, index) => {
-            return listRef.current[index] || itemIdGenerator();
+            return listRef.current[index] || itemIdGenerator({ defaultValue: item });
           });
         }
         return [];
@@ -45,7 +44,7 @@ const GroupList = forwardRef(({ name, defaultLength, empty, reverseOrder, childr
     };
 
     setListFromFormData(get(initData, groupName ? `${groupName}.${name}` : name));
-    const sub = emitter.addListener('form-data-set', ({ data }) => {
+    const sub = emitter.addListener('form:set-data', ({ data }) => {
       setListFromFormData(get(data, groupName ? `${groupName}.${name}` : name));
     });
     return () => {
@@ -54,12 +53,12 @@ const GroupList = forwardRef(({ name, defaultLength, empty, reverseOrder, childr
   });
 
   useEffect(() => {
-    emitter.emit('form-group-change', { parentId, name, list });
+    emitter.emit('form-group:change', { parentId, name, list });
   }, [list, parentId, name, emitter]);
 
   useEffect(() => {
     return () => {
-      emitter.emit('form-group-remove', { parentId, name });
+      emitter.emit('form-group:remove', { parentId, name });
     };
   }, [parentId, name]);
 
@@ -68,20 +67,20 @@ const GroupList = forwardRef(({ name, defaultLength, empty, reverseOrder, childr
   }, [groupName, name]);
 
   const addHandler = useRefCallback(options => {
-    const { isUnshift } = Object.assign({ isUnshift: false }, options);
+    const { isUnshift, defaultValue } = Object.assign({ isUnshift: false }, options);
     setList(list => {
       if (list.length === 0) {
         return [uniqueId(parentId)];
       }
       const newList = list.slice(0);
-      newList[isUnshift ? 'unshift' : 'push'](itemIdGenerator());
+      newList[isUnshift ? 'unshift' : 'push'](itemIdGenerator({ defaultValue }));
       return newList;
     });
   });
 
   const removeHandler = useRefCallback(id => {
     setList(list => {
-      const index = list.indexOf(id);
+      const index = list.findIndex(item => item.id === id);
       const target = get(initData, targetPath);
       if (Array.isArray(target)) {
         target.splice(index, 1);
@@ -103,9 +102,9 @@ const GroupList = forwardRef(({ name, defaultLength, empty, reverseOrder, childr
     return empty;
   }
 
-  return (reverseOrder ? list.slice(0).reverse() : list).map(id => {
+  return (reverseOrder ? list.slice(0).reverse() : list).map(({ id, defaultValue }) => {
     return (
-      <Group key={id} id={id} name={name}>
+      <Group key={id} id={id} name={name} defaultValue={defaultValue}>
         {({ index }) => {
           return children({
             id,
@@ -119,10 +118,5 @@ const GroupList = forwardRef(({ name, defaultLength, empty, reverseOrder, childr
     );
   });
 });
-
-GroupList.defaultProps = {
-  reverseOrder: true,
-  defaultLength: 1
-};
 
 export default GroupList;

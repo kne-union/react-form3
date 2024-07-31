@@ -1,6 +1,6 @@
 {
   "name": "@kne/react-form",
-  "version": "3.0.0",
+  "version": "3.1.0-alpha.0",
   "description": "用于表单的校验",
   "syntax": {
     "esmodules": true
@@ -87,6 +87,7 @@
     "@kne/compose": "^0.1.0",
     "@kne/use-event": "^0.1.5",
     "@kne/use-ref-callback": "^0.1.2",
+    "lodash": "^4.17.21",
     "use-debounce": "^10.0.0"
   }
 }

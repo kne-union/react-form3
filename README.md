@@ -135,7 +135,7 @@ const BaseExample = () => {
         });
       }}>设置校验信息</Button>
     </Space>
-    <ReactForm ref={formApiRef} debug>
+    <ReactForm ref={formApiRef}>
       <Input name="name" label="名称" rule="REQ LEN-0-10" />
       <Input name="name2" label="名称2" rule="REQ LEN-0-10" />
       <Input name="name3" label="名称3" rule="REQ LEN-0-10" />
@@ -162,7 +162,6 @@ const { Button, Space } = antd;
 
 const Input = props => {
   const fieldProps = useField(props);
-
   return (<div>
     {fieldProps.label}
     <input ref={fieldProps.fieldRef} type="text" value={fieldProps.value || ''} onChange={fieldProps.onChange}
@@ -298,7 +297,7 @@ const BaseExample = () => {
       }}>设置整个表单的值
       </button>
     </div>
-    <ReactForm ref={formApiRef} debug onSubmit={(data) => {
+    <ReactForm ref={formApiRef} onSubmit={(data) => {
       console.log('submit:', data);
     }}>
       <div>
@@ -446,7 +445,7 @@ const BaseExample = () => {
           name: 'sum', groupName: 'group'
         }], callback: ({ target, openApi }) => {
           const { group } = openApi.getFormData();
-          openApi.setFieldValue(target, group.filter((item) => item.sum > 0).reduce((a, b) => a + parseInt(b.sum), 0));
+          openApi.setFieldValue(target, (group || []).filter((item) => item.sum > 0).reduce((a, b) => a + parseInt(b.sum), 0));
         }
       }} />
       <div>

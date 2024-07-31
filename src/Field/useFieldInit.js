@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
-import { useFormContext } from '../context';
+import { useFormContext } from '../formContext';
 
-const useFieldInit = ({ name, rule, label, interceptor, associations, noTrim, value, id, groupName, groupIndex, errMsg }) => {
+const useFieldInit = ({ name, rule, label, interceptor, associations, noTrim, defaultValue, id, groupName, groupIndex, errMsg }) => {
   const [fieldIsMount, setFieldIsMount] = useState(false);
   const fieldRef = useRef(null);
   const { formIsMount, emitter } = useFormContext();
@@ -11,16 +11,16 @@ const useFieldInit = ({ name, rule, label, interceptor, associations, noTrim, va
     if (formIsMount) {
       isEmit = true;
       setFieldIsMount(true);
-      emitter.emit('form-field-add', { name, associations: associationsRef.current, id });
+      emitter.emit('form:field:add', { name, associations: associationsRef.current, id });
     }
     return () => {
-      isEmit && emitter.emit('form-field-remove', { id });
+      isEmit && emitter.emit('form:field:remove', { id });
     };
   }, [formIsMount, emitter, name, id]);
 
   useEffect(() => {
     if (fieldIsMount && groupIndex !== -1) {
-      emitter.emit('form-field-edit', {
+      emitter.emit('form:field:change', {
         name,
         rule,
         label,
@@ -29,12 +29,12 @@ const useFieldInit = ({ name, rule, label, interceptor, associations, noTrim, va
         id,
         groupName,
         groupIndex,
-        value,
+        defaultValue,
         fieldRef,
         errMsg
       });
     }
-  }, [fieldIsMount, emitter, name, rule, label, interceptor, noTrim, id, groupName, groupIndex, value, fieldRef, errMsg]);
+  }, [fieldIsMount, emitter, name, rule, label, interceptor, noTrim, id, groupName, groupIndex, defaultValue, fieldRef, errMsg]);
 
   return fieldRef;
 };

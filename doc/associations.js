@@ -90,7 +90,7 @@ const BaseExample = () => {
           name: 'sum', groupName: 'group'
         }], callback: ({ target, openApi }) => {
           const { group } = openApi.getFormData();
-          openApi.setFieldValue(target, group.filter((item) => item.sum > 0).reduce((a, b) => a + parseInt(b.sum), 0));
+          openApi.setFieldValue(target, (group || []).filter((item) => item.sum > 0).reduce((a, b) => a + parseInt(b.sum), 0));
         }
       }} />
       <div>

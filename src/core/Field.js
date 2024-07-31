@@ -3,6 +3,7 @@ import get from 'lodash/get';
 import isNil from 'lodash/isNil';
 import clone from 'lodash/clone';
 import transform from 'lodash/transform';
+import memoize from 'lodash/memoize';
 import set from 'lodash/set';
 import ruleValidate from './ruleValidate';
 import compileErrMsg from './compileErrMsg';
@@ -20,6 +21,23 @@ export const FORM_FIELD_VALIDATE_STATE_ENUM = {
 };
 
 class Field {
+  static stateToError = memoize(formState => {
+    return Array.from(formState.values())
+      .filter(field => {
+        return get(field, 'validate.status') === FORM_FIELD_VALIDATE_STATE_ENUM.ERROR;
+      })
+      .map(field => {
+        return Object.assign({}, field.validate, {
+          name: field.name,
+          label: field.label,
+          groupName: field.groupName,
+          fieldRef: field.fieldRef,
+          groupIndex: field.groupIndex,
+          errMsg: field.getErrMsg()
+        });
+      });
+  });
+
   constructor({ id, name, associations, formInterceptor, options }) {
     this.id = id;
     this.name = name;
@@ -43,12 +61,18 @@ class Field {
 
   static findField = (formState, token) => {
     if (token.id) {
-      return formState[token.id];
+      return formState.get(token.id);
     }
     if (!token.groupName) {
-      return Object.values(formState).find(field => field.name === token.name);
+      return Array.from(formState.values()).find(field => field.name === token.name);
     }
-    return Object.values(formState).find(field => field.name === token.name && field.groupName === token.groupName && field.groupIndex === token.groupIndex);
+    return Array.from(formState.values()).find(field => field.name === token.name && field.groupName === token.groupName && field.groupIndex === token.groupIndex);
+  };
+
+  static matchField = (field, token) => {
+    return Object.keys(token)
+      .filter(key => !isNil(token[key]))
+      .every(key => field[key] === token[key]);
   };
 
   static matchFields = (formState, token) => {
@@ -56,28 +80,21 @@ class Field {
       const target = Field.findField(formState, token);
       return target ? [target] : [];
     }
-    return Object.values(formState).filter(field => {
-      return Object.keys(token)
-        .filter(key => !isNil(token[key]))
-        .every(key => field[key] === token[key]);
-    });
+    return Array.from(formState.values()).filter(field => Field.matchField(field, token));
   };
 
   static matchAssociationFields = (formState, target) => {
-    return Object.values(formState).filter(field => {
+    return Array.from(formState.values()).filter(field => {
       if (field.id === target.id) {
         // 排除自己
         return false;
       }
+
       if (!field.associations.fields && field.associations.fields.length > 0) {
         return false;
       }
 
-      return field.associations.fields.some(token => {
-        return Object.keys(token)
-          .filter(key => !isNil(token[key]))
-          .every(key => target[key] === token[key]);
-      });
+      return field.associations.fields.some(token => Field.matchField(target, token));
     });
   };
 
@@ -92,14 +109,10 @@ class Field {
     return options.name;
   };
 
-  static computedFieldValueFromFormData = (field, formData) => {
-    return get(formData, Field.getFieldValuePath(field));
-  };
-
-  static computedFormDataFormState = state => {
+  static computedFormDataFormState = memoize(state => {
     return transform(
-      state,
-      (result, field, id) => {
+      Array.from(state.values()),
+      (result, field) => {
         if (!field.name) {
           return;
         }
@@ -108,27 +121,13 @@ class Field {
       },
       {}
     );
-  };
-
-  static stateToError = formState => {
-    return Object.values(formState)
-      .filter(field => {
-        return get(field, 'validate.status') === FORM_FIELD_VALIDATE_STATE_ENUM.ERROR;
-      })
-      .map(field => {
-        return Object.assign({}, field.validate, {
-          name: field.name,
-          label: field.label,
-          groupName: field.groupName,
-          fieldRef: field.fieldRef,
-          groupIndex: field.groupIndex,
-          errMsg: field.getErrMsg()
-        });
-      });
-  };
+  });
+  static computedFieldValueFromFormData = memoize((field, formData) => {
+    return get(formData, Field.getFieldValuePath(field));
+  });
 
   static stateToIsPass = formState => {
-    return Object.values(formState).every(field => {
+    return Array.from(formState.values()).every(field => {
       return field.isPass;
     });
   };
@@ -216,9 +215,6 @@ class Field {
     }
     this.value = value;
     this.validate = { status: FORM_FIELD_VALIDATE_STATE_ENUM.INIT };
-    setTimeout(() => {
-      this.options.onValueChange?.(this);
-    }, 0);
     return this;
   }
 
