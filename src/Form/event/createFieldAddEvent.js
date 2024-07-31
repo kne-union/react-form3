@@ -3,7 +3,7 @@ import Field from '../../core/Field';
 const createFieldAddEvent =
   formContextRef =>
   ({ id, name, associations }) => {
-    const { setFormState, task, interceptor } = formContextRef.current;
+    const { setFormState, interceptor, emitter } = formContextRef.current;
     setFormState(formState => {
       const newState = new Map(formState);
       newState.set(
@@ -12,15 +12,10 @@ const createFieldAddEvent =
           id,
           name,
           formInterceptor: interceptor,
-          associations,
-          options: {
-            onValueChange: field => {
-              task.expire(field.id);
-              emitter.emit('form-field:input', { target: field });
-            }
-          }
+          associations
         })
       );
+      emitter.emit(`form-field:mount:${id}`);
       return newState;
     });
   };

@@ -1,11 +1,11 @@
 import Field from '../../core/Field';
 import { filterEmpty } from '../../core/empty';
 
-const createFieldSubmitEvent =
+const createSubmitEvent =
   formContextRef =>
   async (...args) => {
     const { task, emitter, noFilter, onError, onPrevSubmit, onSubmit, onComplete } = formContextRef.current;
-    formContextRef.current.formState.forEach(value => {
+    formContextRef.current.getFormState().forEach(value => {
       emitter.emit(`form-field:validate:${value.id}`);
     });
     let errors = [],
@@ -13,14 +13,14 @@ const createFieldSubmitEvent =
       formData = {};
     try {
       await task.target;
-      isPass = Field.stateToIsPass(formContextRef.current.formState);
+      isPass = Field.stateToIsPass(formContextRef.current.getFormState());
       if (!isPass) {
-        errors = Field.stateToError(formContextRef.current.formState);
+        errors = Field.stateToError(formContextRef.current.getFormState());
         emitter.emit('form:submit:error', errors);
         onError && (await onError(errors, ...args));
         return false;
       }
-      const targetFormData = Field.computedFormDataFormState(formContextRef.current.formState);
+      const targetFormData = Field.computedFormDataFormState(formContextRef.current.getFormState());
       formData = noFilter === true ? targetFormData : filterEmpty(targetFormData);
 
       emitter.emit('form:prev-submit');
@@ -39,4 +39,4 @@ const createFieldSubmitEvent =
     onComplete && onComplete({ formData, isPass, errors });
   };
 
-export default createFieldSubmitEvent;
+export default createSubmitEvent;

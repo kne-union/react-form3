@@ -1,14 +1,11 @@
+import getFieldUtils from '../../core/getFieldUtils';
+
 const createFieldChangeEvent =
   formContextRef =>
-  ({ id, defaultValue, ...fieldProps }) => {
-    const { setFormState, initFormData } = formContextRef.current;
-    setFormState(formState => {
-      let field = formState.get(id);
-      if (!field) {
-        return formState;
-      }
-      field = field.clone();
-      const newState = new Map(formState);
+  async ({ id, defaultValue, ...fieldProps }) => {
+    const { setFormState, initFormData, emitter } = formContextRef.current;
+    const { getField } = getFieldUtils(formContextRef);
+    await getField(id, async field => {
       field.setInfo(fieldProps);
       (() => {
         if (field.value !== void 0) {
@@ -23,8 +20,12 @@ const createFieldChangeEvent =
           field.setFieldValue(defaultValue);
         }
       })();
-      newState.set(id, field);
-      return newState;
+      setFormState(formState => {
+        const newState = new Map(formState);
+        newState.set(id, field);
+        return newState;
+      });
+      emitter.emit(`form-field:input:${field.id}`, { value: field.value });
     });
   };
 

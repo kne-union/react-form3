@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useRef, forwardRef, useImperativeHandle } from 'react';
 import { Provider } from '../formContext';
 import FormEvent from './FormEvent';
 import FormApiProvider from './FormApiProvider';
@@ -7,26 +7,19 @@ import useInterceptors from './useInterceptors';
 import useEvent from '@kne/use-event';
 import useFormTask from './useFormTask';
 import useOpenApi from './useOpenApi';
+import RULES from '../core/RULES';
 
-const Form = ({ data, rules, interceptors, debug, noFilter, onPrevSubmit, onSubmit, onError, onFormDataChange, children }) => {
+const Form = forwardRef(({ data, rules, interceptors, debug, noFilter, onPrevSubmit, onSubmit, onError, onFormDataChange, children }, ref) => {
   const [formState, setFormState] = useState(new Map());
+  const formStateRef = useRef(formState);
   const [formIsMount, setFormIsMount] = useState(false);
   const task = useFormTask();
   const emitter = useEvent({ debug, name: 'react-form3' });
   const { group, setGroup } = useFormGroup();
   const openApi = useOpenApi({ emitter, formState });
   const interceptor = useInterceptors({ interceptors });
-  useEffect(() => {
-    //1. 设置表单初始值
-    emitter.emit('form:data-set', { data });
-    //2. 设置表单为挂载状态
-    setFormIsMount(true);
-    emitter.emit('form:mount');
-    return () => {
-      //3. 设置表单为卸载状态
-      emitter.emit('form:unmount');
-    };
-  }, [emitter]);
+  useImperativeHandle(ref, () => openApi, [openApi]);
+
   return (
     <Provider
       value={{
@@ -34,12 +27,21 @@ const Form = ({ data, rules, interceptors, debug, noFilter, onPrevSubmit, onSubm
         openApi,
         task,
         formState,
-        setFormState,
+        getFormState() {
+          return formStateRef.current;
+        },
+        setFormState(input) {
+          const newFormState = typeof input === 'function' ? input(formStateRef.current) : input;
+          formStateRef.current = newFormState;
+          setFormState(newFormState);
+          return newFormState;
+        },
         formIsMount,
+        setFormIsMount,
         group,
         setGroup,
         initFormData: Object.assign({}, data),
-        rules,
+        rules: Object.assign({}, RULES, rules),
         interceptor,
         debug,
         noFilter,
@@ -49,11 +51,11 @@ const Form = ({ data, rules, interceptors, debug, noFilter, onPrevSubmit, onSubm
         onFormDataChange
       }}
     >
-      <FormApiProvider>
+      <FormApiProvider openApi={openApi}>
         <FormEvent>{children}</FormEvent>
       </FormApiProvider>
     </Provider>
   );
-};
+});
 
 export default Form;

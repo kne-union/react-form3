@@ -1,7 +1,7 @@
-const getIdlePromise = () => {
+const getIdlePromise = (...args) => {
   return new Promise(resolve =>
     setTimeout(() => {
-      resolve();
+      resolve(...args);
     }, 0)
   );
 };

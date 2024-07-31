@@ -61,7 +61,7 @@ const BaseExample = () => {
       }}>设置整个表单的值
       </button>
     </div>
-    <ReactForm ref={formApiRef} debug onSubmit={(data) => {
+    <ReactForm ref={formApiRef} onSubmit={(data) => {
       console.log('submit:', data);
     }}>
       <div>

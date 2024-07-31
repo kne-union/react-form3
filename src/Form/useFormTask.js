@@ -79,7 +79,7 @@ const useFormTask = () => {
     },
     get target() {
       return getIdlePromise()
-        .then(Promise.all(Array.from(taskRef.current.list.values()).map(task => task.target)))
+        .then(() => Promise.all(Array.from(taskRef.current.list.values()).map(task => task.target)))
         .then(getIdlePromise);
     }
   };
