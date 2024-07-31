@@ -7,6 +7,9 @@ const createSetDataEvent =
     setFormState(formState => {
       const newState = new Map();
       Array.from(formState.values()).forEach(field => {
+        if (!field.isReady) {
+          return;
+        }
         const newField = field.clone();
         newField.setFieldValue(newField.getValueFromFormData(data));
         newState.set(field.id, newField);

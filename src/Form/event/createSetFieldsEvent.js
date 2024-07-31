@@ -20,6 +20,9 @@ const createSetFieldsEvent =
       fields &&
         fields.length > 0 &&
         fields.forEach(field => {
+          if (!field.isReady) {
+            return;
+          }
           if (item.hasOwnProperty('value')) {
             emitter.emit(`form-field:input:${field.id}`, { value: isNil(name) ? get(value, field.name) : value });
           }

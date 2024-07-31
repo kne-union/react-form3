@@ -27,7 +27,7 @@ const ResetButton = () => {
 
 const BaseExample = () => {
   return <div>
-    <ReactForm data={{
+    <ReactForm debug data={{
       name: '哈哈哈'
     }} onSubmit={(data) => {
       console.log('submit:', data);

@@ -70,7 +70,7 @@ const GroupList = forwardRef(({ name, defaultLength = 1, empty, reverseOrder = t
     const { isUnshift, defaultValue } = Object.assign({ isUnshift: false }, options);
     setList(list => {
       if (list.length === 0) {
-        return [uniqueId(parentId)];
+        return [{ id: uniqueId(parentId) }];
       }
       const newList = list.slice(0);
       newList[isUnshift ? 'unshift' : 'push'](itemIdGenerator({ defaultValue }));
