@@ -55,6 +55,10 @@ class Field {
     this.options = Object.assign({}, options);
   }
 
+  get isReady() {
+    return this.state === FORM_FIELD_STATE_ENUM.INIT;
+  }
+
   get isPass() {
     return this.validate.status === FORM_FIELD_VALIDATE_STATE_ENUM.PASS;
   }
@@ -142,6 +146,7 @@ class Field {
     this.fieldRef = fieldRef;
     this.errMsg = errMsg;
     this.state = FORM_FIELD_STATE_ENUM.INIT;
+    this.path = Field.getFieldValuePath(this);
     return this;
   }
 

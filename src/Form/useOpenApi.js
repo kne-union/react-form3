@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import Field from '../core/Field';
 
-const useOpenApi = ({ formState, emitter }) => {
+const useOpenApi = ({ formStateRef, emitter }) => {
   return useMemo(() => {
     return {
       emitter,
@@ -9,19 +9,19 @@ const useOpenApi = ({ formState, emitter }) => {
         emitter.emit('form:submit', args);
       },
       get isPass() {
-        return Field.stateToIsPass(formState);
+        return Field.stateToIsPass(formStateRef.current);
       },
       get formState() {
-        return new Map(formState);
+        return new Map(formStateRef.current);
       },
       get data() {
-        return Field.computedFormDataFormState(formState);
+        return Field.computedFormDataFormState(formStateRef.current);
       },
       set data(data) {
         emitter.emit('form:set-data', { data });
       },
       get errors() {
-        return Field.stateToError(formState);
+        return Field.stateToError(formStateRef.current);
       },
       reset() {
         emitter.emit('form:reset');
@@ -46,13 +46,13 @@ const useOpenApi = ({ formState, emitter }) => {
         emitter.emit('form:set-data', { data, runValidate });
       },
       getFormData() {
-        return Field.computedFormDataFormState(formState);
+        return Field.computedFormDataFormState(formStateRef.current);
       },
       getField({ name, groupName, groupIndex }) {
-        return Field.findField(formState, { name, groupName, groupIndex });
+        return Field.findField(formStateRef.current, { name, groupName, groupIndex });
       },
       getFields({ name, groupName, groupIndex }) {
-        return Field.matchFields(formState, { name, groupName, groupIndex });
+        return Field.matchFields(formStateRef.current, { name, groupName, groupIndex });
       },
       setFieldValidate({ name, validate, groupName, groupIndex }) {
         if (!validate) {
@@ -89,7 +89,7 @@ const useOpenApi = ({ formState, emitter }) => {
         );
       }
     };
-  }, [formState, emitter]);
+  }, [formStateRef, emitter]);
 };
 
 export default useOpenApi;

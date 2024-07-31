@@ -16,7 +16,7 @@ const Form = forwardRef(({ data, rules, interceptors, debug, noFilter, onPrevSub
   const task = useFormTask();
   const emitter = useEvent({ debug, name: 'react-form3' });
   const { group, setGroup } = useFormGroup();
-  const openApi = useOpenApi({ emitter, formState });
+  const openApi = useOpenApi({ emitter, formStateRef });
   const interceptor = useInterceptors({ interceptors });
   useImperativeHandle(ref, () => openApi, [openApi]);
 

@@ -62,7 +62,7 @@ const ResetButton = () => {
 
 const BaseExample = () => {
   return <div>
-    <ReactForm data={{
+    <ReactForm debug data={{
       name: '哈哈哈'
     }} onSubmit={(data) => {
       console.log('submit:', data);
@@ -386,7 +386,7 @@ const ResetButton = () => {
 const BaseExample = () => {
   const ref = useRef(null);
   return <div>
-    <ReactForm onSubmit={(data) => {
+    <ReactForm debug onSubmit={(data) => {
       console.log('submit:', data);
     }}>
       <Input name="name" label="名称" rule="REQ LEN-0-10" />

@@ -26,7 +26,8 @@ const useFieldEvent = ({ id, defaultValue, onChange, time }) => {
         setIsValueChanged(true);
         getField(id, async field => {
           field.setValue(value);
-          await setFieldInfo(field);
+          setFieldInfo(field);
+          emitter.emit('form:field:set-value', { id, value: field.getFieldValue(), path: field.path });
           emitter.emit(`form-field:associations:${id}`);
         });
       }),
@@ -67,6 +68,7 @@ const useFieldEvent = ({ id, defaultValue, onChange, time }) => {
         const { getFormState, openApi } = formContextRef.current;
         getField(id, originField => {
           Field.matchAssociationFields(getFormState(), originField).forEach(field => {
+            emitter.emit('form-field:associations:callback', { target: field, origin: originField });
             field.associations?.callback({ target: field, origin: originField, openApi });
           });
         });
