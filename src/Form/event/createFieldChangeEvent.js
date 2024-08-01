@@ -25,8 +25,11 @@ const createFieldChangeEvent =
         newState.set(id, field);
         return newState;
       });
+
+      if (field.value !== void 0) {
+        emitter.emit(`form-field:input:${field.id}`, { value: field.value });
+      }
       emitter.emit(`form:field:ready`, field);
-      emitter.emit(`form-field:input:${field.id}`, { value: field.value });
     });
   };
 
