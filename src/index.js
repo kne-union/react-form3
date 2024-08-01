@@ -26,7 +26,7 @@ export {
   useFormApi as useFormContext
 };
 export { default as useField } from './Field/useField';
-export { GroupList, useGroup, default as Group } from './Group';
+export { GroupList, useGroup } from './Group';
 export { presetRules as preset, default as RULES } from './core/RULES';
 export { default as interceptors } from './core/interceptors';
 export { default as useReset } from './useReset';
