@@ -15,9 +15,9 @@ const createFieldAddEvent =
           associations
         })
       );
-      emitter.emit(`form-field:mount:${id}`);
       return newState;
     });
+    emitter.emit(`form-field:mount:${id}`);
   };
 
 export default createFieldAddEvent;

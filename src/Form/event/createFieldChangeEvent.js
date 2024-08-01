@@ -5,7 +5,7 @@ const createFieldChangeEvent =
   async ({ id, defaultValue, ...fieldProps }) => {
     const { setFormState, initFormData, emitter } = formContextRef.current;
     const { getField } = getFieldUtils(formContextRef);
-    await getField(id, async field => {
+    getField(id, async field => {
       field.setInfo(fieldProps);
       (() => {
         if (field.value !== void 0) {
@@ -25,6 +25,7 @@ const createFieldChangeEvent =
         newState.set(id, field);
         return newState;
       });
+      emitter.emit(`form:field:ready`, field);
       emitter.emit(`form-field:input:${field.id}`, { value: field.value });
     });
   };

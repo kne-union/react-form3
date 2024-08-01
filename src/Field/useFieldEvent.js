@@ -27,8 +27,10 @@ const useFieldEvent = ({ id, defaultValue, onChange, time }) => {
         getField(id, async field => {
           field.setValue(value);
           setFieldInfo(field);
-          emitter.emit('form:field:set-value', { id, value: field.getFieldValue(), path: field.path });
-          emitter.emit(`form-field:associations:${id}`);
+          if (field.getFieldValue() !== void 0) {
+            emitter.emit('form:field:set-value', { id, value: field.getFieldValue(), path: field.path });
+            emitter.emit(`form-field:associations:${id}`);
+          }
         });
       }),
       emitter.addListener(`form-field:format:${id}`, ({ format }) => {
