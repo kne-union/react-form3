@@ -27,10 +27,6 @@ const useSubmit = props => {
         } catch (e) {
           console.error(e);
         }
-<<<<<<< HEAD
-        setIsLoading(false);
-=======
->>>>>>> 17914d4 (修改submitbug)
       },
       [emitter, setIsLoading]
     )

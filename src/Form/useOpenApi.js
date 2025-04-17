@@ -37,15 +37,11 @@ const useOpenApi = ({ formStateRef, emitter }) => {
         });
       },
       validateField({ name, groupName, groupIndex }) {
-<<<<<<< HEAD
-        emitter.emit('form-field:validate', { name, groupName, groupIndex });
-=======
         const field = Field.findField(formStateRef.current, { name, groupName, groupIndex });
         if (!field) {
           return;
         }
         emitter.emit(`form-field:validate:${field.id}`);
->>>>>>> 17914d4 (修改submitbug)
       },
       validateAll() {
         emitter.emit('form:validate');

@@ -18,20 +18,6 @@ const createSubmitEvent =
         errors = Field.stateToError(formContextRef.current.getFormState());
         emitter.emit('form:submit:error', errors);
         onError && (await onError(errors, ...args));
-<<<<<<< HEAD
-        return false;
-      }
-      const targetFormData = Field.computedFormDataFormState(formContextRef.current.getFormState());
-      formData = noFilter === true ? targetFormData : filterEmpty(targetFormData);
-
-      emitter.emit('form:prev-submit', formData, ...args);
-      if (onPrevSubmit && (await onPrevSubmit(formData, ...args)) === false) {
-        emitter.emit('form:prev-submit:error');
-        return false;
-      }
-      onSubmit && (await onSubmit(formData, ...args));
-      emitter.emit('form:submit:success', formData, ...args);
-=======
       } else {
         const targetFormData = Field.computedFormDataFormState(formContextRef.current.getFormState());
         formData = noFilter === true ? targetFormData : filterEmpty(targetFormData);
@@ -44,7 +30,6 @@ const createSubmitEvent =
         onSubmit && (await onSubmit(formData, ...args));
         emitter.emit('form:submit:success', formData, ...args);
       }
->>>>>>> 17914d4 (修改submitbug)
     } catch (e) {
       console.error(e);
       emitter.emit('form:error', errors, ...args, e);
