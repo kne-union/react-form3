@@ -8,7 +8,7 @@
       "scope": [
         {
           "name": "_ReactForm",
-          "packageName": "@kne/current-lib"
+          "packageName": "@kne/current-lib_react-form"
         }
       ]
     },
@@ -19,7 +19,7 @@
       "scope": [
         {
           "name": "_ReactForm",
-          "packageName": "@kne/current-lib"
+          "packageName": "@kne/current-lib_react-form"
         },
         {
           "name": "antd",
@@ -34,7 +34,7 @@
       "scope": [
         {
           "name": "_ReactForm",
-          "packageName": "@kne/current-lib"
+          "packageName": "@kne/current-lib_react-form"
         },
         {
           "name": "antd",
@@ -49,7 +49,7 @@
       "scope": [
         {
           "name": "_ReactForm",
-          "packageName": "@kne/current-lib"
+          "packageName": "@kne/current-lib_react-form"
         },
         {
           "name": "antd",
@@ -64,7 +64,7 @@
       "scope": [
         {
           "name": "_ReactForm",
-          "packageName": "@kne/current-lib"
+          "packageName": "@kne/current-lib_react-form"
         },
         {
           "name": "antd",

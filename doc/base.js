@@ -29,7 +29,12 @@ const BaseExample = () => {
   return <div>
     <ReactForm debug data={{
       name: '哈哈哈'
-    }} onSubmit={(data) => {
+    }} onSubmit={async (data) => {
+      await new Promise((resolve)=>{
+        setTimeout(() => {
+          resolve();
+        },3000);
+      });
       console.log('submit:', data);
     }}>
       <Input name="name" label="名称" rule="REQ LEN-0-10" />
