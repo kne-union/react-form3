@@ -30,7 +30,7 @@ npm i --save @kne/react-form
 
 - 基本示例
 - 简单的form到input组件的绑定
-- _ReactForm(@kne/current-lib)
+- _ReactForm(@kne/current-lib_react-form)
 
 ```jsx
 const { default: ReactForm, useField, useSubmit, useReset } = _ReactForm;
@@ -64,7 +64,12 @@ const BaseExample = () => {
   return <div>
     <ReactForm debug data={{
       name: '哈哈哈'
-    }} onSubmit={(data) => {
+    }} onSubmit={async (data) => {
+      await new Promise((resolve)=>{
+        setTimeout(() => {
+          resolve();
+        },3000);
+      });
       console.log('submit:', data);
     }}>
       <Input name="name" label="名称" rule="REQ LEN-0-10" />
@@ -82,7 +87,7 @@ render(<BaseExample />);
 
 - openApi
 - 展示openApi的使用
-- _ReactForm(@kne/current-lib),antd(antd)
+- _ReactForm(@kne/current-lib_react-form),antd(antd)
 
 ```jsx
 const { default: ReactForm, useField, useSubmit, useReset } = _ReactForm;
@@ -153,7 +158,7 @@ render(<BaseExample />);
 
 - use-form-api
 - 展示useFormApi的使用
-- _ReactForm(@kne/current-lib),antd(antd)
+- _ReactForm(@kne/current-lib_react-form),antd(antd)
 
 ```jsx
 const { default: ReactForm, useField, useSubmit, useReset, useFormApi } = _ReactForm;
@@ -231,7 +236,7 @@ render(<BaseExample />);
 
 - group
 - 展示group的使用
-- _ReactForm(@kne/current-lib),antd(antd)
+- _ReactForm(@kne/current-lib_react-form),antd(antd)
 
 ```jsx
 const { default: ReactForm, useField, useSubmit, useReset, GroupList } = _ReactForm;
@@ -350,7 +355,7 @@ render(<BaseExample />);
 
 - associations
 - 字段关联关系
-- _ReactForm(@kne/current-lib),antd(antd)
+- _ReactForm(@kne/current-lib_react-form),antd(antd)
 
 ```jsx
 const { default: ReactForm, useField, useSubmit, useReset, GroupList } = _ReactForm;
