@@ -71,6 +71,17 @@
           "packageName": "antd"
         }
       ]
+    },
+    {
+      "title": "基本示例",
+      "description": "简单的form到input组件的绑定",
+      "code": "./remote-rule.js",
+      "scope": [
+        {
+          "name": "_ReactForm",
+          "packageName": "@kne/current-lib_react-form"
+        }
+      ]
     }
   ]
 }

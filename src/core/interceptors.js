@@ -30,13 +30,17 @@ export const runInterceptors = (interceptors, type, names) => {
     names = [names];
   }
 
-  const currentInterceptors = uniqBy(
-    baseInterceptors[type]
-      .concat(get(interceptors, type, []))
-      .filter(({ name }) => names.indexOf(name) > -1)
-      .reverse(),
-    ({ name }) => name
-  );
+  const allInterceptors = baseInterceptors[type].concat(get(interceptors, type, []));
+
+  const currentInterceptors = names
+    .map(name => {
+      return allInterceptors.find(({ name: interceptorName }) => interceptorName === name);
+    })
+    .filter(target => !!target);
+
+  if (type === 'input') {
+    currentInterceptors.reverse();
+  }
 
   if (currentInterceptors.length === 0) {
     return value => value;
