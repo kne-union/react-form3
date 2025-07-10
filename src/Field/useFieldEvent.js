@@ -45,18 +45,18 @@ const useFieldEvent = ({ id, defaultValue, onChange, time }) => {
         const { rules, task } = formContextRef.current;
 
         await task.append(id, async () => {
-          getField(id, async field => {
+          await getField(id, async field => {
             field.setValidateStatus({ status: FORM_FIELD_VALIDATE_STATE_ENUM.PENDING });
             setFieldInfo(field);
           });
-          getField(id, field => {
+          await getField(id, field => {
             //处理空格情况
             if (field.noTrim !== true) {
               typeof field.value === 'string' && emitter.emit(`form-field:format:${id}`, { format: value => value.trim() });
             }
           });
 
-          getField(id, async field => {
+          await getField(id, async field => {
             //添加到校验任务队列
             await field.runValidate(rules, () => Field.computedFormDataFormState(formContextRef.current.getFormState()));
             setFieldInfo(field);
