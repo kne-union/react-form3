@@ -67,13 +67,13 @@ const GroupList = forwardRef(({ name, defaultLength = 1, empty, reverseOrder = t
   }, [groupName, name]);
 
   const addHandler = useRefCallback(options => {
-    const { isUnshift, defaultValue } = Object.assign({ isUnshift: false }, options);
+    const { defaultValue } = Object.assign({}, options);
     setList(list => {
       if (list.length === 0) {
         return [{ id: uniqueId(parentId) }];
       }
       const newList = list.slice(0);
-      newList[isUnshift ? 'unshift' : 'push'](itemIdGenerator({ defaultValue }));
+      newList.push(itemIdGenerator({ defaultValue }));
       return newList;
     });
   });

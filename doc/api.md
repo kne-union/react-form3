@@ -1,270 +1,189 @@
-### Form组件API
+### Form 组件 API
 
 #### 属性
 
 | 属性名 | 说明 | 类型 | 默认值 |
 |-----|----|----|-----|
-| initialValues | 表单初始值 | object | {} |
-| onSubmit | 表单提交回调函数 | function(values, form) | - |
-| onSubmitFail | 表单提交失败回调函数 | function(errors, form) | - |
-| onReset | 表单重置回调函数 | function(form) | - |
-| onValidate | 表单验证回调函数 | function(values, form) | - |
-| interceptors | 表单拦截器 | object | {} |
+| data | 表单初始值 | object | {} |
+| rules | 自定义验证规则 | object | {} |
+| interceptors | 表单拦截器配置 | object | {} |
+| debug | 是否开启调试模式 | boolean | false |
+| noFilter | 是否关闭空值过滤 | boolean | false |
+| onPrevSubmit | 提交前回调 | function(values, form) | - |
+| onSubmit | 提交回调 | function(values) | Promise |
+| onError | 错误回调 | function(errors) | - |
+| onFormDataChange | 表单数据变化回调 | function(formData) | - |
 | children | 表单内容 | React.ReactNode | - |
 
-#### 示例
-
-```jsx
-import { Form, Field } from 'react-form';
-
-const MyForm = () => {
-  const handleSubmit = (values) => {
-    console.log('Form values:', values);
-  };
-
-  return (
-    <Form
-      initialValues={{ name: 'John', email: '' }}
-      onSubmit={handleSubmit}
-    >
-      <Field name="name" label="Name" />
-      <Field name="email" label="Email" />
-      <button type="submit">Submit</button>
-    </Form>
-  );
-};
-```
-
-### useOpenApi钩子API
-
-useOpenApi钩子提供了一组用于操作表单的方法。
-
-#### 返回值
+#### Ref 暴露的方法
 
 | 方法名 | 说明 | 参数 | 返回值 |
 |-----|----|----|-----|
-| getValues | 获取表单所有字段的值 | - | object |
-| getValue | 获取指定字段的值 | (name: string) | any |
-| setValues | 设置表单多个字段的值 | (values: object, runValidate?: boolean) | void |
-| setValue | 设置指定字段的值 | (name: string, value: any, runValidate?: boolean) | void |
-| setFields | 设置表单字段的属性 | (fields: array, runValidate?: boolean) | void |
-| resetFields | 重置表单字段 | - | void |
-| submit | 提交表单 | - | Promise |
-| validate | 验证表单 | (names?: string[]) | Promise<boolean> |
-| getFieldError | 获取指定字段的错误信息 | (name: string) | string |
-| getErrors | 获取表单所有字段的错误信息 | - | object |
-| isFieldTouched | 判断字段是否被用户操作过 | (name: string) | boolean |
-| isFieldValidating | 判断字段是否正在验证 | (name: string) | boolean |
-| getFieldsValue | 获取多个字段的值 | (nameList: string[]) | object |
+| submit | 提交表单 | - | void |
+| data | 获取表单数据 | - | object |
+| set data(data) | 设置表单数据 | object | void |
+| reset | 重置表单 | - | void |
+| errors | 获取错误信息 | - | array |
+| isPass | 表单是否通过验证 | - | boolean |
+| setFormData | 设置表单数据 | (data, runValidate?) | void |
+| getFormData | 获取表单数据 | - | object |
+| setFields | 批量设置字段属性 | (fields, options?) | void |
+| setField | 设置单个字段属性 | (field, options?) | void |
+| setFieldValue | 设置字段值 | (target, value, options?) | void |
+| setFieldValidate | 设置字段验证状态 | (target, validate) | void |
+| getField | 获取指定字段 | (target) | Field |
+| getFields | 获取匹配的字段列表 | (target) | Field[] |
+| validateField | 验证指定字段 | (target) | void |
+| validateAll | 验证所有字段 | - | void |
+| onReady | 表单就绪回调 | callback | - |
+| onDestroy | 表单销毁回调 | callback | - |
 
-#### 示例
+### useField Hook API
 
-```jsx
-import { Form, useOpenApi } from 'react-form';
+#### 参数
 
-const FormWithApi = () => {
-  const formApi = useOpenApi();
-  
-  const handleClick = () => {
-    formApi.setValue('name', 'New Name');
-    console.log(formApi.getValues());
-  };
-
-  return (
-    <Form>
-      <Field name="name" label="Name" />
-      <Field name="email" label="Email" />
-      <button type="button" onClick={handleClick}>
-        Update Name
-      </button>
-      <button type="submit">Submit</button>
-    </Form>
-  );
-};
-```
-
-### Field组件API
-
-#### 属性
-
-| 属性名 | 说明 | 类型 | 默认值 |
+| 参数名 | 说明 | 类型 | 默认值 |
 |-----|----|----|-----|
 | name | 字段名称 | string | - |
 | label | 字段标签 | string | - |
+| rule | 验证规则字符串 | string | - |
+| interceptor | 字段拦截器配置 | object | {} |
+| associations | 字段关联配置 | object | {} |
+| noTrim | 是否不自动去空格 | boolean | false |
+| debounce | 防抖延迟时间 | number | 0 |
 | defaultValue | 默认值 | any | - |
-| rules | 验证规则 | array | [] |
-| children | 自定义渲染函数 | function(field) | - |
-| onChange | 值变化回调 | function(value, field) | - |
-| onBlur | 失焦回调 | function(e, field) | - |
-| onFocus | 聚焦回调 | function(e, field) | - |
+| errMsg | 自定义错误信息 | string | - |
+| onChange | 值变化回调 | function(value) | - |
 
-#### 示例
+#### 返回值
 
-```jsx
-import { Form, Field } from 'react-form';
+| 属性名 | 说明 | 类型 |
+|-----|----|----|
+| id | 字段唯一标识 | string |
+| name | 字段名称 | string |
+| label | 字段标签 | string |
+| value | 字段值 | any |
+| fieldRef | 字段 ref | RefObject |
+| formData | 表单数据 | object |
+| formState | 表单状态 | Map |
+| rule | 验证规则 | string |
+| groupName | 分组名称 | string |
+| groupIndex | 分组索引 | number |
+| onChange | 值变化处理函数 | function |
+| isValueChanged | 是否值已改变 | boolean |
+| triggerValidate | 触发验证 | function |
+| associationOptions | 关联选项 | object |
+| errState | 错误状态 (0未验证, 1通过, 2错误, 3验证中) | number |
+| errMsg | 错误信息 | string |
 
-const MyForm = () => {
-  return (
-    <Form>
-      <Field
-        name="username"
-        label="Username"
-        defaultValue=""
-        rules={[
-          { required: true, message: 'Please input your username!' },
-          { min: 3, message: 'Username must be at least 3 characters' }
-        ]}
-      >
-        {({ value, onChange, error }) => (
-          <div>
-            <input value={value} onChange={e => onChange(e.target.value)} />
-            {error && <div className="error">{error}</div>}
-          </div>
-        )}
-      </Field>
-      <button type="submit">Submit</button>
-    </Form>
-  );
-};
-```
+### useSubmit Hook API
 
-### Group组件API
+#### 返回值
+
+| 属性名 | 说明 | 类型 |
+|-----|----|----|
+| isLoading | 是否正在提交 | boolean |
+| isPass | 表单是否通过验证 | boolean |
+| onClick | 提交点击处理函数 | function |
+
+### useReset Hook API
+
+#### 返回值
+
+| 属性名 | 说明 | 类型 |
+|-----|----|----|
+| onClick | 重置点击处理函数 | function |
+
+### useFormApi Hook API
+
+#### 返回值
+
+与 Form 组件 ref 暴露的方法相同，返回 openApi 对象。
+
+### Group 组件 API
 
 #### 属性
 
-| 属性名 | 说明 | 类型 | 默认值 |
-|-----|----|----|-----|
-| name | 分组名称 | string | - |
-| children | 分组内容 | React.ReactNode | - |
+| 属性名 | 说明 | 类型 |
+|-----|----|----|
+| id | 分组唯一标识 | string |
+| name | 分组名称 | string |
+| defaultValue | 分组默认值 | object |
+| children | 渲染函数 | function({ id, name, group, index }) |
 
-#### GroupList组件属性
+#### children 参数
+
+| 参数名 | 说明 | 类型 |
+|-----|----|----|
+| id | 分组唯一标识 | string |
+| name | 完整分组名称 | string |
+| group | 分组数据 | object |
+| index | 分组索引 | number |
+
+### GroupList 组件 API
+
+#### 属性
 
 | 属性名 | 说明 | 类型 | 默认值 |
 |-----|----|----|-----|
 | name | 分组列表名称 | string | - |
-| children | 分组模板 | function(index) | - |
-| defaultLength | 初始分组数量 | number | 0 |
+| defaultLength | 初始分组数量 | number | 1 |
+| empty | 空列表时显示的内容 | ReactNode | - |
+| reverseOrder | 是否倒序显示 | boolean | true |
+| children | 渲染函数 | function | - |
+| ref | ref 对象 | RefObject | - |
 
-#### 示例
+#### children 参数
 
-```jsx
-import { Form, Field, Group, GroupList } from 'react-form';
+| 参数名 | 说明 | 类型 |
+|-----|----|----|
+| id | 分组项唯一标识 | string |
+| index | 分组项索引 | number |
+| length | 分组列表总长度 | number |
+| onAdd | 添加分组项 | function(options) |
+| onRemove | 删除当前分组项 | function |
 
-const MyForm = () => {
-  return (
-    <Form>
-      <GroupList name="contacts" defaultLength={1}>
-        {(index) => (
-          <Group name={index}>
-            <Field name="name" label="Name" />
-            <Field name="phone" label="Phone" />
-          </Group>
-        )}
-      </GroupList>
-      <button type="button" onClick={() => formApi.addGroup('contacts')}>
-        Add Contact
-      </button>
-      <button type="submit">Submit</button>
-    </Form>
-  );
-};
-```
+#### ref 暴露的方法
 
-### 表单验证规则API
+| 方法名 | 说明 | 参数 |
+|-----|----|----|
+| onAdd | 添加分组项 | function({ isUnshift?, defaultValue? }) |
+| onRemove | 删除分组项 | function(id) |
 
-#### 内置规则
+### 内置验证规则
 
-| 规则名 | 说明 | 参数类型 | 示例 |
+| 规则名 | 说明 | 格式 | 示例 |
 |-----|----|----|-----|
-| required | 必填字段 | boolean | { required: true, message: '必填字段' } |
-| min | 最小长度/值 | number | { min: 3, message: '最小长度为3' } |
-| max | 最大长度/值 | number | { max: 10, message: '最大长度为10' } |
-| pattern | 正则表达式匹配 | RegExp | { pattern: /^\d+$/, message: '必须为数字' } |
-| validator | 自定义验证函数 | function | { validator: (value) => value === 'test' ? '' : '验证失败' } |
+| REQ | 必填验证 | REQ | rule="REQ" |
+| TEL | 手机号验证 | TEL | rule="TEL" |
+| EMAIL | 邮箱验证 | EMAIL | rule="EMAIL" |
+| LEN | 长度验证 | LEN-{min}-{max} | rule="LEN-3-10" |
 
-#### 示例
+#### 验证规则格式说明
 
-```jsx
-import { Form, Field } from 'react-form';
+- 验证规则通过空格分隔，可组合多个规则
+- LEN 规则格式：LEN-{最小长度}-{最大长度}，若最小等于最大则表示精确长度
 
-const MyForm = () => {
-  return (
-    <Form>
-      <Field
-        name="email"
-        label="Email"
-        rules={[
-          { required: true, message: '请输入邮箱' },
-          { pattern: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/, message: '邮箱格式不正确' }
-        ]}
-      />
-      <Field
-        name="password"
-        label="Password"
-        rules={[
-          { required: true, message: '请输入密码' },
-          { min: 6, message: '密码长度不能小于6位' },
-          { 
-            validator: (value) => {
-              if (!/[A-Z]/.test(value)) {
-                return '密码必须包含大写字母';
-              }
-              return '';
-            }
-          }
-        ]}
-      />
-      <button type="submit">Submit</button>
-    </Form>
-  );
-};
-```
+### 全局拦截器 API
 
-### 表单拦截器API
+#### 注册拦截器
 
-拦截器可以在表单操作的不同阶段进行拦截和修改。
-
-#### 可用拦截器
-
-| 拦截器名 | 说明 | 参数 | 返回值 |
+| 方法名 | 说明 | 参数 | 返回值 |
 |-----|----|----|-----|
-| beforeSubmit | 表单提交前拦截 | (values, form) | values或Promise |
-| afterSubmit | 表单提交后拦截 | (result, form) | result或Promise |
-| beforeValidate | 表单验证前拦截 | (values, form) | values或Promise |
-| afterValidate | 表单验证后拦截 | (errors, form) | errors或Promise |
-| beforeReset | 表单重置前拦截 | (form) | void或Promise |
-| afterReset | 表单重置后拦截 | (form) | void或Promise |
+| interceptors.input.use | 注册输入拦截器 | (name, function) | number |
+| interceptors.output.use | 注册输出拦截器 | (name, function) | number |
 
-#### 示例
+#### 使用示例
 
-```jsx
-import { Form, Field } from 'react-form';
+```javascript
+import { interceptors } from '@kne/react-form';
 
-const MyForm = () => {
-  const interceptors = {
-    beforeSubmit: (values) => {
-      console.log('Before submit:', values);
-      // 可以修改values
-      return {
-        ...values,
-        timestamp: Date.now()
-      };
-    },
-    afterSubmit: (result) => {
-      console.log('After submit:', result);
-      return result;
-    }
-  };
+// 注册输入拦截器（在值存入表单前执行）
+interceptors.input.use('trim', value => value.trim());
+interceptors.input.use('number', value => Number(value));
 
-  return (
-    <Form
-      interceptors={interceptors}
-      onSubmit={(values) => console.log('Submit:', values)}
-    >
-      <Field name="name" label="Name" />
-      <Field name="email" label="Email" />
-      <button type="submit">Submit</button>
-    </Form>
-  );
-};
+// 注册输出拦截器（在值从表单取出时执行）
+interceptors.output.use('formatDate', value => {
+  return value ? new Date(value).toISOString() : value;
+});
 ```
