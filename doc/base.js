@@ -21,7 +21,10 @@ const Input = props => {
           ref={fieldProps.fieldRef}
           type={props.type || 'text'}
           value={fieldProps.value || ''}
-          onChange={e => fieldProps.onChange(e.target.value)}
+          onChange={e => {
+            fieldProps.onChange(e.target.value);
+            fieldProps.triggerValidate();
+          }}
           onBlur={fieldProps.triggerValidate}
           placeholder={props.placeholder}
           status={isError ? 'error' : undefined}

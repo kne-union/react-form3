@@ -1,34 +1,35 @@
 import { useCallback, useEffect, useState } from 'react';
-import { useFormContext } from './formContext';
 import getIdlePromise from './core/getIdlePromise';
+import { useFormApi } from './Form/FormApiProvider';
 
 const useSubmit = props => {
   const [isLoading, setIsLoading] = useState(false);
-  const { isPass, emitter } = useFormContext();
+  const formApi = useFormApi();
   const { onClick } = Object.assign({}, props);
   useEffect(() => {
-    const target = emitter.addListener('form:submit:complete', () => {
+    const target = formApi.emitter.addListener('form:submit:complete', () => {
       setIsLoading(false);
     });
     return () => {
       target && target.remove();
     };
-  }, [emitter]);
+  }, [formApi.emitter]);
+
   return {
     isLoading,
-    isPass,
+    isPass: formApi.isPass,
     onClick: useCallback(
       async (...args) => {
         setIsLoading(true);
         try {
           await getIdlePromise();
           const returnArgs = onClick && (await onClick(...args));
-          emitter.emit('form:submit', returnArgs || args);
+          formApi.emitter.emit('form:submit', returnArgs || args);
         } catch (e) {
           console.error(e);
         }
       },
-      [emitter, setIsLoading]
+      [formApi.emitter, setIsLoading]
     )
   };
 };
