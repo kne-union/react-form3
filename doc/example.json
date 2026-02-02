@@ -3,7 +3,7 @@
   "list": [
     {
       "title": "基本示例",
-      "description": "简单的form到input组件的绑定",
+      "description": "展示基本的表单使用方式，包括表单绑定、验证规则、提交和重置",
       "code": "./base.js",
       "scope": [
         {
@@ -13,8 +13,8 @@
       ]
     },
     {
-      "title": "openApi",
-      "description": "展示openApi的使用",
+      "title": "ref 操作 API",
+      "description": "通过 ref 访问表单的 openApi，实现数据获取、字段设置、验证控制等操作",
       "code": "./open-api.js",
       "scope": [
         {
@@ -28,8 +28,8 @@
       ]
     },
     {
-      "title": "use-form-api",
-      "description": "展示useFormApi的使用",
+      "title": "useFormApi Hook",
+      "description": "使用 useFormApi Hook 在表单内部访问和控制表单状态",
       "code": "./use-form-api.js",
       "scope": [
         {
@@ -43,8 +43,8 @@
       ]
     },
     {
-      "title": "group",
-      "description": "展示group的使用",
+      "title": "动态分组",
+      "description": "使用 Group 和 GroupList 实现动态增删的表单分组，支持嵌套分组",
       "code": "./group.js",
       "scope": [
         {
@@ -58,8 +58,8 @@
       ]
     },
     {
-      "title": "associations",
-      "description": "字段关联关系",
+      "title": "字段关联",
+      "description": "通过 associations 实现字段间的联动关系，支持单字段联动、多字段联动、分组联动和计算联动",
       "code": "./associations.js",
       "scope": [
         {
@@ -73,13 +73,17 @@
       ]
     },
     {
-      "title": "基本示例",
-      "description": "简单的form到input组件的绑定",
+      "title": "远程验证规则",
+      "description": "自定义远程异步验证规则，模拟接口调用进行字段校验",
       "code": "./remote-rule.js",
       "scope": [
         {
           "name": "_ReactForm",
           "packageName": "@kne/current-lib_react-form"
+        },
+        {
+          "name": "antd",
+          "packageName": "antd"
         }
       ]
     }
