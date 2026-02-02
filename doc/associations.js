@@ -55,17 +55,25 @@ const ResetButton = () => {
 
 const BaseExample = () => {
   const ref = useRef(null);
+  const formApiRef = useRef(null);
   return (
     <div style={{ padding: 24, background: '#f5f5f5', minHeight: '100vh' }}>
       <Card title="字段关联示例" bordered={false}>
         <ReactForm
+          ref={formApiRef}
           debug
           onSubmit={data => {
             console.log('submit:', data);
             message.success('提交成功: ' + JSON.stringify(data, null, 2));
-          }}
-        >
-          <Card type="inner" title={<Space>1. 单字段关联<Tag color="blue">描述跟随名称</Tag></Space>} style={{ marginBottom: 16 }}>
+          }}>
+          <Card
+            type="inner"
+            title={
+              <Space>
+                1. 单字段关联<Tag color="blue">描述跟随名称</Tag>
+              </Space>
+            }
+            style={{ marginBottom: 16 }}>
             <Input name="name" label="名称" rule="REQ LEN-0-10" />
             <Input
               name="des"
@@ -73,14 +81,21 @@ const BaseExample = () => {
               rule="LEN-0-10"
               associations={{
                 fields: [{ name: 'name' }],
-                callback: ({ target, origin }) => {
-                  return origin.value;
+                callback: ({ target, origin, openApi }) => {
+                  openApi.setFieldValue(target, origin.value);
                 }
               }}
             />
           </Card>
 
-          <Card type="inner" title={<Space>2. 多字段关联<Tag color="green">姓名拼接全名</Tag></Space>} style={{ marginBottom: 16 }}>
+          <Card
+            type="inner"
+            title={
+              <Space>
+                2. 多字段关联<Tag color="green">姓名拼接全名</Tag>
+              </Space>
+            }
+            style={{ marginBottom: 16 }}>
             <Space wrap>
               <Input name="familyName" label="姓" rule="REQ LEN-0-10" />
               <Input name="firstName" label="名" rule="REQ LEN-0-10" />
@@ -93,13 +108,20 @@ const BaseExample = () => {
                 fields: [{ name: 'familyName' }, { name: 'firstName' }],
                 callback: ({ target, openApi }) => {
                   const { firstName, familyName } = openApi.getFormData();
-                  return firstName && familyName ? `${familyName}${firstName}` : '';
+                  openApi.setFieldValue(target, `${familyName || ''}${firstName || ''}`);
                 }
               }}
             />
           </Card>
 
-          <Card type="inner" title={<Space>3. 计算关联<Tag color="orange">金额除以比例</Tag></Space>} style={{ marginBottom: 16 }}>
+          <Card
+            type="inner"
+            title={
+              <Space>
+                3. 计算关联<Tag color="orange">金额除以比例</Tag>
+              </Space>
+            }
+            style={{ marginBottom: 16 }}>
             <Space wrap>
               <Input name="money" label="总金额" />
               <Input name="ratio" label="比例" />
@@ -113,13 +135,20 @@ const BaseExample = () => {
                   const { money, ratio } = openApi.getFormData();
                   const numMoney = parseFloat(money) || 0;
                   const numRatio = parseFloat(ratio) || 1;
-                  return numRatio > 0 ? (numMoney / numRatio).toFixed(2) : '';
+                  openApi.setFieldValue(target, numRatio > 0 ? (numMoney / numRatio).toFixed(2) : '');
                 }
               }}
             />
           </Card>
 
-          <Card type="inner" title={<Space>4. 分组关联<Tag color="purple">汇总求和</Tag></Space>} style={{ marginBottom: 16 }}>
+          <Card
+            type="inner"
+            title={
+              <Space>
+                4. 分组关联<Tag color="purple">汇总求和</Tag>
+              </Space>
+            }
+            style={{ marginBottom: 16 }}>
             <Button type="primary" onClick={() => ref.current.onAdd()} style={{ marginBottom: 12 }}>
               添加数量项
             </Button>
@@ -141,10 +170,8 @@ const BaseExample = () => {
                 fields: [{ name: 'sum', groupName: 'group' }],
                 callback: ({ target, openApi }) => {
                   const { group } = openApi.getFormData();
-                  const total = (group || [])
-                    .filter(item => item.sum > 0)
-                    .reduce((a, b) => a + parseInt(b.sum), 0);
-                  return total > 0 ? total.toString() : '';
+                  const total = (group || []).filter(item => item.sum > 0).reduce((a, b) => a + parseInt(b.sum), 0);
+                  openApi.setFieldValue(target, total > 0 ? total.toString() : '');
                 }
               }}
             />

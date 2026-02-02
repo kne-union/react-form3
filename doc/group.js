@@ -55,6 +55,42 @@ const ResetButton = () => {
   return <Button onClick={onClick}>重置</Button>;
 };
 
+const ChildrenGroup = () => {
+  const ref = useRef(null);
+  return (
+    <div style={{ marginTop: 12 }}>
+      <div style={{ fontSize: 12, color: '#666', marginBottom: 8 }}>子分组：</div>
+      <GroupList ref={ref} name="inner" defaultLength={0} reverseOrder={false}>
+        {({ index: innerIndex, onRemove: innerRemove, length: innerLength }) => {
+          return (
+            <div
+              key={innerIndex}
+              style={{
+                padding: 12,
+                marginBottom: 8,
+                background: '#e8e8e8',
+                borderRadius: 4
+              }}>
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                <span style={{ fontSize: 12 }}>子项 {innerIndex + 1}</span>
+                <Input name="detail" label="详情" rule="LEN-0-20" />
+                <Button size="small" danger onClick={innerRemove}>
+                  删除
+                </Button>
+              </div>
+            </div>
+          );
+        }}
+      </GroupList>
+      <div style={{ marginTop: 8 }}>
+        <Button size="small" onClick={() => ref.current.onAdd()}>
+          添加子项
+        </Button>
+      </div>
+    </div>
+  );
+};
+
 const BaseExample = () => {
   const ref = useRef();
   const formApiRef = useRef();
@@ -106,13 +142,12 @@ const BaseExample = () => {
           }}>
           <div style={{ marginBottom: 16 }}>
             <Button type="primary" onClick={() => ref.current.onAdd()}>
-              添加到开头
+              添加
             </Button>
-            <Button onClick={() => ref.current.onAdd({ isUnshift: false })}>添加到末尾</Button>
           </div>
 
           <GroupList ref={ref} name="group" defaultLength={1}>
-            {({ index, onAdd, onRemove, length }) => {
+            {({ index, onRemove, length }) => {
               return (
                 <div
                   key={index}
@@ -132,36 +167,7 @@ const BaseExample = () => {
                     <Input name="email" label="邮箱" rule="EMAIL" />
                   </div>
 
-                  <div style={{ marginTop: 12 }}>
-                    <div style={{ fontSize: 12, color: '#666', marginBottom: 8 }}>子分组：</div>
-                    <GroupList name="inner" defaultLength={0}>
-                      {({ index: innerIndex, onRemove: innerRemove, length: innerLength }) => {
-                        return (
-                          <div
-                            key={innerIndex}
-                            style={{
-                              padding: 12,
-                              marginBottom: 8,
-                              background: '#e8e8e8',
-                              borderRadius: 4
-                            }}>
-                            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                              <span style={{ fontSize: 12 }}>子项 {innerIndex + 1}</span>
-                              <Input name="detail" label="详情" rule="LEN-0-20" />
-                              <Button size="small" danger onClick={innerRemove}>
-                                删除
-                              </Button>
-                            </div>
-                          </div>
-                        );
-                      }}
-                    </GroupList>
-                    <div style={{ marginTop: 8 }}>
-                      <Button size="small" onClick={() => onAdd()}>
-                        添加子项
-                      </Button>
-                    </div>
-                  </div>
+                  <ChildrenGroup key={index}/>
 
                   <div style={{ marginTop: 12 }}>
                     <Button danger size="small" onClick={onRemove}>

@@ -4,7 +4,7 @@
 
 ### 描述
 
-用于表单的校验
+react-form 是一个轻量级且功能强大的 React 表单库，专为现代化应用设计，提供了简洁的 API 和完整的表单管理解决方案。
 
 
 ### 安装
@@ -16,48 +16,46 @@ npm i --save @kne/react-form
 
 ### 概述
 
-react-form 是一个轻量级且功能强大的 React 表单库，专为现代化应用设计，提供了简洁的 API 和完整的表单管理解决方案。
+## 核心特性
 
-### 核心特性
-
-#### 📦 轻量级状态管理
+### 📦 轻量级状态管理
 - 基于 React Context + State，零额外依赖
-- 📊 支持嵌套分组和复杂数据结构
-- ⚡ 实时状态更新，O(1) 高效数据访问
+- 支持嵌套分组和复杂数据结构
+- 实时状态更新，O(1) 高效数据访问
 
-#### 🎛️ 灵活字段控制
-- 🔧 `useField` Hook，字段级精细化控制
-- 🔗 支持字段级拦截器与关联联动
-- 🛡️ 内置防抖，智能去空值处理
+### 🎛️ 灵活字段控制
+- `useField` Hook，字段级精细化控制
+- 支持字段级拦截器与关联联动
+- 内置防抖，智能去空值处理
 
-#### 📡 事件驱动架构
-- 🎯 基于事件发射器的解耦设计
-- 📢 支持表单/字段/分组三级事件监听
-- 🔌 便于扩展和自定义
+### 📡 事件驱动架构
+- 基于事件发射器的解耦设计
+- 支持表单/字段/分组三级事件监听
+- 便于扩展和自定义
 
-#### ✅ 强大验证系统
-- 🔶 内置规则：必填、手机号、邮箱、长度等
-- 🌐 支持异步远程验证
-- 📝 可自定义规则与错误提示
+### ✅ 强大验证系统
+- 内置规则：必填、手机号、邮箱、长度等
+- 支持异步远程验证
+- 可自定义规则与错误提示
 
-#### 📁 分组管理
-- 🔄 支持无限嵌套分组结构
-- ➕ GroupList 动态增删，轻松管理
-- 📊 支持分组级数据批量操作
+### 📁 分组管理
+- 支持无限嵌套分组结构
+- GroupList 动态增删，轻松管理
+- 支持分组级数据批量操作
 
-#### 🎮 表单 API
-- 🪝 `useFormApi` Hook，完整操作能力
-- 📥📤 支持获取/设置表单数据
-- 🎯 支持字段级验证控制
+### 🎮 表单 API
+- `useFormApi` Hook，完整操作能力
+- 支持获取/设置表单数据
+- 支持字段级验证控制
 
-### Form 组件设计理念
+## 设计理念
 
-#### 设计原则
 Form 组件采用分层架构设计，将表单管理、状态管理、事件处理、验证逻辑等职责分离，通过 Context 进行数据传递，实现了高度解耦和可扩展性。
 
-#### 核心架构
+## 核心架构
 
-##### 1. Context 层
+### Context 层
+
 Form 通过 Provider 将表单的核心能力传递给子组件，包括：
 
 - `emitter` - 事件发射器，负责表单内部的事件通信
@@ -70,7 +68,7 @@ Form 通过 Provider 将表单的核心能力传递给子组件，包括：
 - `interceptor` - 拦截器配置
 - `onSubmit` / `onError` - 提交和错误回调
 
-##### 2. Provider 层次结构
+### Provider 层次结构
 
 ```
 Form (根组件)
@@ -80,30 +78,24 @@ Form (根组件)
   │   │       └─ children (表单字段)
 ```
 
-##### 3. 事件驱动机制
+## 字段系统
 
-Form 使用事件发射器模式，支持以下事件类型：
+### useField Hook
 
-**表单级别事件**：
-- `form:submit` - 表单提交
-- `form:submit:complete` - 提交完成
-- `form:reset` - 表单重置
-- `form:validate` - 表单验证
-- `form:set-data` - 设置表单数据
-- `form:set-fields` - 设置字段属性
+```javascript
+const fieldProps = useField({
+  name: 'fieldName',      // 字段名称（必填）
+  label: '字段标签',       // 字段标签
+  rule: 'REQ LEN-3-10', // 验证规则
+  interceptor: 'trim',      // 拦截器
+  associations: { ... }     // 字段关联
+});
+```
 
-**字段级别事件**：
-- `form-field:validate:{fieldId}` - 字段验证
-- `form-field:change:{fieldId}` - 字段值变化
+### 字段状态
 
-**分组级别事件**：
-- `form-group:change` - 分组数据变化
-- `form-group:remove` - 分组移除
-
-##### 4. 状态管理设计
-
-**字段状态** (Field 类)：
 每个字段都有独立的状态对象，包含：
+
 - `id` - 字段唯一标识
 - `name` - 字段名称
 - `groupName` - 所属分组名称
@@ -114,39 +106,22 @@ Form 使用事件发射器模式，支持以下事件类型：
 - `validate` - 验证状态（INIT/PENDING/PASS/ERROR）
 - `errMsg` - 错误信息
 
-**表单状态**：
+### 表单状态
+
 使用 Map 结构存储所有字段状态，通过 `formStateRef.current` 持有引用，确保状态更新的一致性。
 
-##### 5. API 设计
+## 验证规则
 
-**openApi 提供的操作方法**：
+### 规则格式
 
-| 类别 | 方法 | 说明 |
-|------|------|------|
-| 数据操作 | `data` / `set data()` | 获取/设置表单数据 |
-| | `getFormData()` / `setFormData()` | 获取/设置表单数据 |
-| | `getField()` / `getFields()` | 获取单个/多个字段 |
-| | `setField()` / `setFields()` | 设置单个/多个字段属性 |
-| | `setFieldValue()` | 设置字段值 |
-| 验证操作 | `validateField()` | 验证单个字段 |
-| | `validateAll()` | 验证所有字段 |
-| | `setFieldValidate()` | 设置字段验证状态 |
-| | `isPass` | 判断表单是否通过验证 |
-| 错误处理 | `errors` | 获取所有错误信息 |
-| 表单控制 | `submit()` | 提交表单 |
-| | `reset()` | 重置表单 |
-| | `onReady()` | 表单就绪回调 |
-| | `onDestroy()` | 表单销毁回调 |
-
-##### 6. 验证规则解析与执行流程
-
-**验证规则格式**：
 验证规则支持三种格式：
+
 1. **字符串格式**：`"REQ LEN-3-10 EMAIL"` - 空格分隔多个规则
 2. **函数格式**：自定义验证函数
 3. **正则表达式**：直接使用正则验证
 
-**规则字符串解析规则**：
+### 规则解析
+
 ```
 规则格式：{RULE_NAME}-{arg1}-{arg2}-{arg3}...
 
@@ -156,111 +131,13 @@ Form 使用事件发射器模式，支持以下事件类型：
 - "REQ LEN-3-10"     → 多个规则组合
 ```
 
-```plantuml
-@startuml
-skinparam backgroundColor #FEFEFE
-skinparam sequence {
-  ArrowColor #4682B4
-  LifeLineBorderColor #4682B4
-  ActorBackgroundColor #F0F8FF
-  ActorBorderColor #4682B4
-}
-
-actor "用户输入" as User
-participant "规则字符串" as RuleStr
-participant "规则解析器" as Parser
-participant "验证规则集合" as Rules
-
-User -> RuleStr : "REQ LEN-3-10 EMAIL"
-RuleStr -> Parser : 按空格分割
-note right: ["REQ", "LEN-3-10", "EMAIL"]
-
-loop 遍历每个规则
-  Parser -> Parser : 按 - 分割
-  note right: 例: "LEN-3-10" → ["LEN", "3", "10"]
-
-  Parser -> Parser : 提取规则名（转大写）
-  note right: "LEN"
-
-  Parser -> Rules : 查找规则函数
-  alt 规则存在
-    Rules --> Parser : 返回规则函数
-  else 规则不存在
-    Parser -> Parser : 报错：规则不存在
-  end
-
-  Parser -> Parser : 提取参数
-  note right: [3, 10]
-end
-
-Parser --> User : 解析完成
-@enduml
-```
-
-解析步骤：
+**解析步骤**：
 1. 按空格分割规则字符串 → `["REQ", "LEN-3-10"]`
 2. 对每个规则按 `-` 分割 → `["LEN", "3", "10"]`
 3. 第一部分为规则名（转为大写匹配） → `LEN`
 4. 后续部分为规则参数 → `[3, 10]`
 
-**规则执行流程**：
-
-```plantuml
-@startuml
-start
-
-:字段值变化;
-
-:触发验证事件\n(form-field:validate:{fieldId});
-
-:加入异步任务队列\n(task.append);
-
-:设置字段状态为 PENDING;
-
-if (当前规则是 REQ?) then (否)
-  :执行 REQ 规则判断;
-  if (值为空?) then (是)
-    :直接返回 PASS\n(跳过后续规则);
-    stop
-  else (否)
-    :继续执行后续规则;
-  endif
-else (是)
-  :继续执行后续规则;
-endif
-
-partition "依次执行每个规则" {
-  :解析规则名和参数;
-  :查找对应的验证函数;
-
-  if (同步规则?) then (是)
-    :立即执行;
-  else (否)
-    :await 等待结果;
-  endif
-}
-
-:收集验证数据\n(validateData);
-
-if (验证结果全部通过?) then (是)
-  :status = PASS;
-  :msg = '';
-else (否)
-  :status = ERROR;
-  :msg = errMsg;
-endif
-
-:更新字段状态;
-
-:触发验证完成事件\n(form-field:validate:complete:{fieldId});
-
-:触发关联字段更新\n(form-field:associations);
-
-stop
-@enduml
-```
-
-**内置验证规则**：
+### 内置规则
 
 | 规则名 | 参数 | 说明 | 验证逻辑 | 错误提示 |
 |--------|------|------|---------|---------|
@@ -269,7 +146,7 @@ stop
 | `EMAIL` | 无 | 邮箱验证 | 匹配邮箱正则 | "请输入有效的邮箱" |
 | `LEN` | min, max | 长度验证 | min ≤ 长度 ≤ max | "%s长度必须大于min/小于max/等于min" |
 
-**自定义验证规则**：
+### 自定义规则
 
 规则函数接收参数：`(value, ...args, { data, field })`
 
@@ -308,270 +185,7 @@ rules: {
 }
 ```
 
-**规则使用示例**：
-
-```javascript
-// 单个规则
-rule="REQ"
-
-// 多个规则组合
-rule="REQ LEN-3-10 EMAIL"
-
-// 使用自定义规则
-rule="REQ CHECK_UNIQUE PASSWORD_STRENGTH-3"
-```
-
-##### 7. 拦截器系统详解
-
-**拦截器类型**：
-
-| 类型 | 执行时机 | 用途 | 方向 |
-|------|---------|------|------|
-| `input` | 值存入表单前 | 数据清理、转换、规范化 | 外部 → 内部 |
-| `output` | 值从表单取出时 | 数据格式化、转换 | 内部 → 外部 |
-
-**拦截器注册机制**：
-
-```javascript
-// 全局拦截器（所有表单共享）
-import { interceptors } from 'react-form';
-
-// 注册输入拦截器
-interceptors.input.use('trim', value => value.trim());
-
-// 注册输出拦截器
-interceptors.output.use('formatDate', value => {
-  return value ? new Date(value).toISOString() : null;
-});
-
-// 注册数字格式化
-interceptors.output.use('number', value => {
-  return value ? parseFloat(value) : 0;
-});
-```
-
-**表单级拦截器**（优先级高于全局）：
-
-```javascript
-<Form
-  interceptors={{
-    input: [
-      {
-        name: 'customTrim',
-        exec: value => value.trim()
-      }
-    ],
-    output: [
-      {
-        name: 'uppercase',
-        exec: value => value.toUpperCase()
-      }
-    ]
-  }}
->
-```
-
-**字段级拦截器配置**：
-
-```javascript
-<Input
-  name="email"
-  rule="EMAIL"
-  interceptor="trim"  // 指定使用的拦截器
-/>
-```
-
-**拦截器执行流程**：
-
-```plantuml
-@startuml
-skinparam backgroundColor #FEFEFE
-skinparam activity {
-  BackgroundColor #F0F8FF
-  BorderColor #4682B4
-}
-
-partition "Input 拦截器执行流程" {
-  start
-  :用户输入值;
-  :触发 onChange;
-  :form-field:input:{fieldId} 事件;
-  :合并拦截器链:\n[表单拦截器] + [全局拦截器];
-  :按指定名称筛选拦截器;
-  :反转执行顺序\n(input: 从后往前);
-  :compose(...interceptors.map(i => i.exec))(value);
-  :返回处理后的值;
-  :存入 Field.value;
-  end
-}
-
-partition "Output 拦截器执行流程" {
-  start
-  :调用 getFieldValue();
-  :合并拦截器链:\n[表单拦截器] + [全局拦截器];
-  :按指定名称筛选拦截器;
-  :正常执行顺序\n(output: 从前往后);
-  :compose(...interceptors.map(i => i.exec))(value);
-  :返回处理后的值;
-  end
-}
-@enduml
-```
-
-**拦截器链式执行示例**：
-
-```plantuml
-@startuml
-skinparam backgroundColor #FEFEFE
-skinparam activity {
-  BackgroundColor #FFF8DC
-  BorderColor #DAA520
-}
-
-start
-:原始值;
-note right: "  1,234.56  "
-
-:trim() → "1,234.56";
-
-:removeComma() → "1234.56";
-
-:toNumber() → 1234.56;
-
-note right: number类型
-
-stop
-@enduml
-```
-
-```javascript
-// 配置多个拦截器
-<Input
-  name="price"
-  interceptor="trim,removeComma,toNumber"
-/>
-```
-
-**拦截器优先级**：
-
-```
-优先级从高到低：
-1. 字段指定拦截器
-2. 表单级拦截器
-3. 全局拦截器
-
-同名拦截器：后注册的覆盖先注册的
-```
-
-**内置拦截器使用**：
-
-```javascript
-import { interceptors } from 'react-form';
-
-// 常用输入拦截器
-interceptors.input.use('trim', v => v?.trim?.());
-interceptors.input.use('toUpperCase', v => v?.toUpperCase?.());
-interceptors.input.use('toLowerCase', v => v?.toLowerCase?.());
-interceptors.input.use('removeComma', v => v?.replace?.(/,/g, ''));
-
-// 常用输出拦截器
-interceptors.output.use('toNumber', v => v ? parseFloat(v) : null);
-interceptors.output.use('formatCurrency', v => v ? \`¥\${v.toFixed(2)}\` : '¥0.00');
-interceptors.output.use('defaultEmpty', v => v || '');
-```
-
-**完整示例：金额字段处理**：
-
-```javascript
-// 注册拦截器
-interceptors.input.use('parseMoney', value => {
-  // 去除所有非数字字符（保留小数点）
-  const cleaned = value.replace(/[^\d.]/g, '');
-  // 转换为数字
-  return parseFloat(cleaned) || 0;
-});
-
-interceptors.output.use('formatMoney', value => {
-  // 格式化为千分位
-  return value.toLocaleString('zh-CN', {
-    style: 'currency',
-    currency: 'CNY'
-  });
-});
-
-// 使用
-<Input
-  name="amount"
-  rule="REQ"
-  interceptor="parseMoney,formatMoney"
-/>
-
-// 用户输入：10000
-// 内部存储：10000 (number)
-// 输出展示：¥10,000.00
-```
-
-##### 8. 字段关联设计
-
-通过 `associations` 配置实现字段间的联动：
-
-```javascript
-{
-  fields: [{ name: 'field1' }, { name: 'field2' }],
-  callback: ({ target, origin, openApi }) => {
-    // 当关联字段变化时，更新目标字段
-    openApi.setFieldValue(target, computedValue);
-  }
-};
-```
-
-##### 9. 生命周期管理
-
-**表单生命周期**：
-
-| 阶段 | 触发时机 | 执行操作 |
-|------|---------|---------|
-| 挂载 | Form 组件首次渲染 | - 初始化 formState (Map 结构)<br>- 创建事件发射器<br>- 初始化 openApi<br>- 设置初始数据<br>- 绑定事件监听器 |
-| 更新 | Form 组件属性变化 | - 更新 rules 配置<br>- 更新 interceptors 配置<br>- 处理 data 变化 |
-| 卸载 | Form 组件销毁 | - 清理所有事件监听器<br>- 清理异步任务<br>- 释放内存资源 |
-
-**字段生命周期**：
-
-| 阶段 | 状态 | 说明 | 可执行操作 |
-|------|------|------|-----------|
-| PRE_INIT | 预初始化 | 字段刚创建，尚未绑定到表单状态 | - |
-| INIT | 已初始化 | 字段已注册到表单，可以交互 | 获取/设置值、验证、触发事件 |
-
-**字段状态转换流程**：
-
-```
-字段创建
-  ↓
-PRE_INIT (useField 初始化)
-  ↓
-INIT (字段注册到 formState)
-  ↓
-用户交互
-  ↓
-PENDING (正在验证)
-  ↓
-PASS 或 ERROR (验证结果)
-  ↓
-用户修改或手动重置
-  ↓
-INIT (回到初始状态)
-```
-
-**验证状态枚举**：
-
-| 状态值 | 枚举名 | 说明 | UI 展示建议 |
-|--------|--------|------|------------|
-| 0 | INIT | 初始状态 | 不显示错误提示 |
-| 1 | PASS | 验证通过 | 不显示错误提示 |
-| 2 | ERROR | 验证失败 | 显示错误信息 |
-| 3 | PENDING | 验证中 | 显示加载状态 |
-
-##### 10. 验证流程详解
+### 验证流程
 
 **单个字段验证流程**：
 
@@ -627,7 +241,7 @@ INIT (回到初始状态)
    └─ 提交处理
 ```
 
-**验证规则执行顺序**
+**验证规则执行顺序**：
 
 规则按照声明顺序依次执行，遇到第一个失败的规则即停止。
 
@@ -639,34 +253,259 @@ INIT (回到初始状态)
 
 若第 1 步失败，则不会执行后续检查。
 
-**自定义验证规则**
+## 字段关联
+
+### 设计机制
+
+字段关联是 react-form 实现表单字段联动的核心机制，通过监听关联字段的变化，自动更新目标字段的值。
+
+### 配置结构
 
 ```javascript
-// 同步验证
-rules: {
-  CUSTOM_RULE: value => {
-    return {
-      result: value === 'valid',
-      errMsg: value === 'valid' ? '' : '验证失败'
-    };
-  }
-}
-
-// 异步验证
-rules: {
-  CHECK_UNIQUE: async value => {
-    const exists = await checkExists(value);
-    return {
-      result: !exists,
-      errMsg: exists ? '该值已存在' : ''
-    };
+{
+  fields: [{ name: 'field1' }, { name: 'field2' }],
+  callback: ({ target, origin, openApi }) => {
+    // 当关联字段变化时，更新目标字段
+    openApi.setFieldValue(target, computedValue);
   }
 }
 ```
 
-##### 11. 事件系统详解
+| 属性 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| `fields` | `Array<FieldReference>` | 是 | 关联字段列表，当这些字段变化时触发回调 |
+| `callback` | `Function` | 是 | 关联回调函数，接收变化信息并更新目标字段 |
 
-**事件类型与触发时机**：
+### FieldReference 引用类型
+
+```javascript
+// 单字段引用
+{ name: 'fieldName' }
+
+// 分组字段引用
+{ name: 'fieldName', groupName: 'groupName' }
+
+// 分组特定项引用
+{
+  name: 'fieldName',
+  groupName: 'groupName',
+  groupIndex: 0  // 索引从 0 开始
+}
+```
+
+### Callback 回调参数
+
+```javascript
+callback: ({ target, origin, openApi, data }) => {
+  // target: 目标字段的完整对象
+  //   - id: 字段唯一标识
+  //   - name: 字段名称
+  //   - value: 字段当前值
+  //   - groupName: 所属分组（如果有）
+  //   - groupIndex: 分组索引（如果有）
+
+  // origin: 源字段的值（仅在单字段关联时有值）
+
+  // openApi: 表单 API 对象，提供操作方法
+  //   - getFormData(): 获取表单数据
+  //   - setFieldValue(target, value): 设置字段值
+  //   - setFieldValidate(target, validate): 设置验证状态
+
+  // data: 表单完整数据（包含所有字段）
+}
+```
+
+### 触发时机
+
+1. **关联字段值变化** - 用户输入或程序修改关联字段的值
+2. **关联字段验证完成** - 字段验证通过后触发
+3. **表单数据批量设置** - 通过 `setFormData()` 或 `setFields()` 批量更新数据
+
+### 执行顺序
+
+关联更新会递归触发，注意避免循环依赖。
+
+### 避免循环关联
+
+```javascript
+// ❌ 错误：循环依赖
+<Input name="a" associations={{ fields: [{ name: 'b' }], callback: ({ origin }) => origin }} />
+<Input name="b" associations={{ fields: [{ name: 'a' }], callback: ({ origin }) => origin }} />
+
+// ✅ 正确：单向依赖
+<Input name="fullName" associations={{
+  fields: [{ name: 'firstName' }, { name: 'lastName' }],
+  callback: ({ data }) => \`\${data.firstName}\${data.lastName}\`
+}} />
+```
+
+### 实用场景
+
+详见 `associations.js` 示例文件，包含以下场景：
+
+1. **单字段值复制** - 将一个字段的值自动复制到另一个字段
+2. **多字段值拼接** - 将多个字段的值拼接成一个新值
+3. **数值计算** - 基于多个字段的值进行计算
+4. **分组字段聚合** - 对分组内的多个字段值进行汇总
+
+## 拦截器
+
+### 拦截器类型
+
+| 类型 | 执行时机 | 用途 | 方向 |
+|------|---------|------|------|
+| `input` | 值存入表单前 | 数据清理、转换、规范化 | 外部 → 内部 |
+| `output` | 值从表单取出时 | 数据格式化、转换 | 内部 → 外部 |
+
+### 注册机制
+
+```javascript
+// 全局拦截器（所有表单共享）
+import { interceptors } from 'react-form';
+
+// 注册输入拦截器
+interceptors.input.use('trim', value => value.trim());
+
+// 注册输出拦截器
+interceptors.output.use('formatDate', value => {
+  return value ? new Date(value).toISOString() : null;
+});
+```
+
+### 表单级拦截器（优先级高于全局）
+
+```javascript
+<Form
+  interceptors={{
+    input: [
+      {
+        name: 'customTrim',
+        exec: value => value.trim()
+      }
+    ],
+    output: [
+      {
+        name: 'uppercase',
+        exec: value => value.toUpperCase()
+      }
+    ]
+  }}
+>
+```
+
+### 字段级拦截器配置
+
+```javascript
+<Input
+  name="email"
+  rule="EMAIL"
+  interceptor="trim"  // 指定使用的拦截器
+/>
+```
+
+### 优先级
+
+```
+优先级从高到低：
+1. 字段指定拦截器
+2. 表单级拦截器
+3. 全局拦截器
+
+同名拦截器：后注册的覆盖先注册的
+```
+
+### 常用拦截器
+
+```javascript
+import { interceptors } from 'react-form';
+
+// 常用输入拦截器
+interceptors.input.use('trim', v => v?.trim?.());
+interceptors.input.use('toUpperCase', v => v?.toUpperCase?.());
+interceptors.input.use('toLowerCase', v => v?.toLowerCase?.());
+interceptors.input.use('removeComma', v => v?.replace?.(/,/g, ''));
+
+// 常用输出拦截器
+interceptors.output.use('toNumber', v => v ? parseFloat(v) : null);
+interceptors.output.use('formatCurrency', v => v ? \`¥\${v.toFixed(2)}\` : '¥0.00');
+interceptors.output.use('defaultEmpty', v => v || '');
+```
+
+## 分组管理
+
+### GroupList 组件
+
+用于管理动态增删的分组字段。
+
+```javascript
+<GroupList ref={ref} name="groupName" defaultLength={2}>
+  {({ index, onAdd, onRemove, length }) => (
+    // 分组项内容
+  )}
+</GroupList>
+```
+
+### 回调参数
+
+| 参数 | 类型 | 说明 |
+|------|------|------|
+| `index` | `number` | 当前项的索引 |
+| `onAdd` | `Function` | 添加新项的函数 |
+| `onRemove` | `Function` | 移除当前项的函数 |
+| `length` | `number` | 分组当前项数 |
+
+## 表单 API
+
+### useSubmit Hook
+
+```javascript
+const { isLoading, isPass, onClick } = useSubmit();
+```
+
+| 参数 | 类型 | 说明 |
+|------|------|------|
+| `isLoading` | `boolean` | 提交中状态 |
+| `isPass` | `boolean` | 表单是否通过验证 |
+| `onClick` | `Function` | 提交函数 |
+
+### useReset Hook
+
+```javascript
+const { onClick } = useReset();
+```
+
+| 参数 | 类型 | 说明 |
+|------|------|------|
+| `onClick` | `Function` | 重置函数 |
+
+### useFormApi Hook
+
+```javascript
+const { openApi } = useFormApi();
+```
+
+### openApi 方法
+
+| 类别 | 方法 | 说明 |
+|------|------|------|
+| **数据操作** | `data` / `setData()` | 获取/设置表单数据 |
+| | `getFormData()` / `setFormData()` | 获取/设置表单数据 |
+| | `getField()` / `getFields()` | 获取单个/多个字段 |
+| | `setField()` / `setFields()` | 设置单个/多个字段属性 |
+| | `setFieldValue()` | 设置字段值 |
+| **验证操作** | `validateField()` | 验证单个字段 |
+| | `validateAll()` | 验证所有字段 |
+| | `setFieldValidate()` | 设置字段验证状态 |
+| | `isPass` | 判断表单是否通过验证 |
+| **错误处理** | `errors` | 获取所有错误信息 |
+| **表单控制** | `submit()` | 提交表单 |
+| | `reset()` | 重置表单 |
+| | `onReady()` | 表单就绪回调 |
+| | `onDestroy()` | 表单销毁回调 |
+
+## 事件系统
+
+### 事件类型
 
 | 事件名称 | 触发时机 | 参数 |
 |---------|---------|------|
@@ -683,7 +522,7 @@ rules: {
 | `form:mount` | 表单挂载完成时 | - |
 | `form:unmount` | 表单卸载时 | - |
 
-**事件监听方式**：
+### 监听方式
 
 ```javascript
 // 在组件内通过 emitter 监听
@@ -708,7 +547,7 @@ useEffect(() => {
 }, []);
 ```
 
-**使用 onReady/onDestroy 钩子**：
+### 生命周期钩子
 
 ```javascript
 const formApiRef = useRef();
@@ -723,22 +562,51 @@ formApiRef.current.onDestroy(() => {
 });
 ```
 
-##### 12. 性能优化
+## 生命周期
 
-- 使用 `useRef` 保存表单状态引用，避免不必要的重渲染
-- 使用 `useMemo` 缓存计算结果（如 openApi、分组路径等）
-- 事件监听器及时清理，避免内存泄漏
-- 防抖处理字段验证，避免频繁触发
-- 使用 Map 存储字段状态，查找效率 O(1)
+### 表单生命周期
 
-### 使用场景
+| 阶段 | 触发时机 | 执行操作 |
+|------|---------|---------|
+| 挂载 | Form 组件首次渲染 | - 初始化 formState (Map 结构)<br>- 创建事件发射器<br>- 初始化 openApi<br>- 设置初始数据<br>- 绑定事件监听器 |
+| 更新 | Form 组件属性变化 | - 更新 rules 配置<br>- 更新 interceptors 配置<br>- 处理 data 变化 |
+| 卸载 | Form 组件销毁 | - 清理所有事件监听器<br>- 清理异步任务<br>- 释放内存资源 |
 
-- 简单的单页表单
-- 复杂的多步骤表单流程
-- 动态表单字段生成
-- 字段间的关联和联动
-- 需要精细化控制表单验证的场景
+### 字段生命周期
 
+| 阶段 | 状态 | 说明 | 可执行操作 |
+|------|------|------|-----------|
+| PRE_INIT | 预初始化 | 字段刚创建，尚未绑定到表单状态 | - |
+| INIT | 已初始化 | 字段已注册到表单，可以交互 | 获取/设置值、验证、触发事件 |
+
+### 字段状态转换流程
+
+```
+字段创建
+  ↓
+PRE_INIT (useField 初始化)
+  ↓
+INIT (字段注册到 formState)
+  ↓
+用户交互
+  ↓
+PENDING (正在验证)
+  ↓
+PASS 或 ERROR (验证结果)
+  ↓
+用户修改或手动重置
+  ↓
+INIT (回到初始状态)
+```
+
+### 验证状态枚举
+
+| 状态值 | 枚举名 | 说明 | UI 展示建议 |
+|--------|--------|------|------------|
+| 0 | INIT | 初始状态 | 不显示错误提示 |
+| 1 | PASS | 验证通过 | 不显示错误提示 |
+| 2 | ERROR | 验证失败 | 显示错误信息 |
+| 3 | PENDING | 验证中 | 显示加载状态 |
 
 ### 示例
 
@@ -1277,6 +1145,42 @@ const ResetButton = () => {
   return <Button onClick={onClick}>重置</Button>;
 };
 
+const ChildrenGroup = () => {
+  const ref = useRef(null);
+  return (
+    <div style={{ marginTop: 12 }}>
+      <div style={{ fontSize: 12, color: '#666', marginBottom: 8 }}>子分组：</div>
+      <GroupList ref={ref} name="inner" defaultLength={0} reverseOrder={false}>
+        {({ index: innerIndex, onRemove: innerRemove, length: innerLength }) => {
+          return (
+            <div
+              key={innerIndex}
+              style={{
+                padding: 12,
+                marginBottom: 8,
+                background: '#e8e8e8',
+                borderRadius: 4
+              }}>
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                <span style={{ fontSize: 12 }}>子项 {innerIndex + 1}</span>
+                <Input name="detail" label="详情" rule="LEN-0-20" />
+                <Button size="small" danger onClick={innerRemove}>
+                  删除
+                </Button>
+              </div>
+            </div>
+          );
+        }}
+      </GroupList>
+      <div style={{ marginTop: 8 }}>
+        <Button size="small" onClick={() => ref.current.onAdd()}>
+          添加子项
+        </Button>
+      </div>
+    </div>
+  );
+};
+
 const BaseExample = () => {
   const ref = useRef();
   const formApiRef = useRef();
@@ -1328,13 +1232,12 @@ const BaseExample = () => {
           }}>
           <div style={{ marginBottom: 16 }}>
             <Button type="primary" onClick={() => ref.current.onAdd()}>
-              添加到开头
+              添加
             </Button>
-            <Button onClick={() => ref.current.onAdd({ isUnshift: false })}>添加到末尾</Button>
           </div>
 
           <GroupList ref={ref} name="group" defaultLength={1}>
-            {({ index, onAdd, onRemove, length }) => {
+            {({ index, onRemove, length }) => {
               return (
                 <div
                   key={index}
@@ -1354,36 +1257,7 @@ const BaseExample = () => {
                     <Input name="email" label="邮箱" rule="EMAIL" />
                   </div>
 
-                  <div style={{ marginTop: 12 }}>
-                    <div style={{ fontSize: 12, color: '#666', marginBottom: 8 }}>子分组：</div>
-                    <GroupList name="inner" defaultLength={0}>
-                      {({ index: innerIndex, onRemove: innerRemove, length: innerLength }) => {
-                        return (
-                          <div
-                            key={innerIndex}
-                            style={{
-                              padding: 12,
-                              marginBottom: 8,
-                              background: '#e8e8e8',
-                              borderRadius: 4
-                            }}>
-                            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                              <span style={{ fontSize: 12 }}>子项 {innerIndex + 1}</span>
-                              <Input name="detail" label="详情" rule="LEN-0-20" />
-                              <Button size="small" danger onClick={innerRemove}>
-                                删除
-                              </Button>
-                            </div>
-                          </div>
-                        );
-                      }}
-                    </GroupList>
-                    <div style={{ marginTop: 8 }}>
-                      <Button size="small" onClick={() => onAdd()}>
-                        添加子项
-                      </Button>
-                    </div>
-                  </div>
+                  <ChildrenGroup key={index}/>
 
                   <div style={{ marginTop: 12 }}>
                     <Button danger size="small" onClick={onRemove}>
@@ -1473,17 +1347,25 @@ const ResetButton = () => {
 
 const BaseExample = () => {
   const ref = useRef(null);
+  const formApiRef = useRef(null);
   return (
     <div style={{ padding: 24, background: '#f5f5f5', minHeight: '100vh' }}>
       <Card title="字段关联示例" bordered={false}>
         <ReactForm
+          ref={formApiRef}
           debug
           onSubmit={data => {
             console.log('submit:', data);
             message.success('提交成功: ' + JSON.stringify(data, null, 2));
-          }}
-        >
-          <Card type="inner" title={<Space>1. 单字段关联<Tag color="blue">描述跟随名称</Tag></Space>} style={{ marginBottom: 16 }}>
+          }}>
+          <Card
+            type="inner"
+            title={
+              <Space>
+                1. 单字段关联<Tag color="blue">描述跟随名称</Tag>
+              </Space>
+            }
+            style={{ marginBottom: 16 }}>
             <Input name="name" label="名称" rule="REQ LEN-0-10" />
             <Input
               name="des"
@@ -1491,14 +1373,21 @@ const BaseExample = () => {
               rule="LEN-0-10"
               associations={{
                 fields: [{ name: 'name' }],
-                callback: ({ target, origin }) => {
-                  return origin.value;
+                callback: ({ target, origin, openApi }) => {
+                  openApi.setFieldValue(target, origin.value);
                 }
               }}
             />
           </Card>
 
-          <Card type="inner" title={<Space>2. 多字段关联<Tag color="green">姓名拼接全名</Tag></Space>} style={{ marginBottom: 16 }}>
+          <Card
+            type="inner"
+            title={
+              <Space>
+                2. 多字段关联<Tag color="green">姓名拼接全名</Tag>
+              </Space>
+            }
+            style={{ marginBottom: 16 }}>
             <Space wrap>
               <Input name="familyName" label="姓" rule="REQ LEN-0-10" />
               <Input name="firstName" label="名" rule="REQ LEN-0-10" />
@@ -1511,13 +1400,20 @@ const BaseExample = () => {
                 fields: [{ name: 'familyName' }, { name: 'firstName' }],
                 callback: ({ target, openApi }) => {
                   const { firstName, familyName } = openApi.getFormData();
-                  return firstName && familyName ? `${familyName}${firstName}` : '';
+                  openApi.setFieldValue(target, `${familyName || ''}${firstName || ''}`);
                 }
               }}
             />
           </Card>
 
-          <Card type="inner" title={<Space>3. 计算关联<Tag color="orange">金额除以比例</Tag></Space>} style={{ marginBottom: 16 }}>
+          <Card
+            type="inner"
+            title={
+              <Space>
+                3. 计算关联<Tag color="orange">金额除以比例</Tag>
+              </Space>
+            }
+            style={{ marginBottom: 16 }}>
             <Space wrap>
               <Input name="money" label="总金额" />
               <Input name="ratio" label="比例" />
@@ -1531,13 +1427,20 @@ const BaseExample = () => {
                   const { money, ratio } = openApi.getFormData();
                   const numMoney = parseFloat(money) || 0;
                   const numRatio = parseFloat(ratio) || 1;
-                  return numRatio > 0 ? (numMoney / numRatio).toFixed(2) : '';
+                  openApi.setFieldValue(target, numRatio > 0 ? (numMoney / numRatio).toFixed(2) : '');
                 }
               }}
             />
           </Card>
 
-          <Card type="inner" title={<Space>4. 分组关联<Tag color="purple">汇总求和</Tag></Space>} style={{ marginBottom: 16 }}>
+          <Card
+            type="inner"
+            title={
+              <Space>
+                4. 分组关联<Tag color="purple">汇总求和</Tag>
+              </Space>
+            }
+            style={{ marginBottom: 16 }}>
             <Button type="primary" onClick={() => ref.current.onAdd()} style={{ marginBottom: 12 }}>
               添加数量项
             </Button>
@@ -1559,10 +1462,8 @@ const BaseExample = () => {
                 fields: [{ name: 'sum', groupName: 'group' }],
                 callback: ({ target, openApi }) => {
                   const { group } = openApi.getFormData();
-                  const total = (group || [])
-                    .filter(item => item.sum > 0)
-                    .reduce((a, b) => a + parseInt(b.sum), 0);
-                  return total > 0 ? total.toString() : '';
+                  const total = (group || []).filter(item => item.sum > 0).reduce((a, b) => a + parseInt(b.sum), 0);
+                  openApi.setFieldValue(target, total > 0 ? total.toString() : '');
                 }
               }}
             />
