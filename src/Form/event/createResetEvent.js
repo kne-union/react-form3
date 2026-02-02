@@ -1,7 +1,14 @@
 const createResetEvent = formContextRef => () => {
   const { getFormState, emitter } = formContextRef.current;
-  Array.from(getFormState().values()).forEach(field => {
-    emitter.emit(`form-field:input:${field.id}`, { value: void 0 });
+
+  emitter.emit(`form:set-fields`, {
+    data: Array.from(getFormState().values()).map(field => {
+      const newField = field.clone();
+      newField.value = void 0;
+      newField.validate = {};
+      return newField;
+    }),
+    runValidate: false
   });
 };
 

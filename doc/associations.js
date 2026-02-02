@@ -1,166 +1,163 @@
 const { default: ReactForm, useField, useSubmit, useReset, GroupList } = _ReactForm;
 const { useRef } = React;
-const { Button, Divider, message } = antd;
+const { Button, Space, Card, Input: AntInput, Tag, Typography, message } = antd;
+const { Text } = Typography;
 
 const Input = props => {
   const fieldProps = useField(props);
+  const isError = fieldProps.errState === 2;
+  const isValidating = fieldProps.errState === 3;
 
   return (
     <div style={{ marginBottom: 16 }}>
-      <label>{fieldProps.label}</label>
+      <div style={{ marginBottom: 4 }}>
+        <Text type={isError ? 'danger' : undefined}>{fieldProps.label}</Text>
+      </div>
       <div>
-        <input
+        <AntInput
           {...fieldProps.associationOptions}
           ref={fieldProps.fieldRef}
           type="text"
           value={fieldProps.value || ''}
-          onChange={fieldProps.onChange}
+          onChange={e => fieldProps.onChange(e.target.value)}
           onBlur={fieldProps.triggerValidate}
-          style={{ padding: 8, border: '1px solid #ddd', borderRadius: 4, width: 200 }}
+          status={isError ? 'error' : undefined}
+          style={{ width: 200 }}
         />
-        {fieldProps.errMsg && <span style={{ color: 'red', marginLeft: 8 }}>{fieldProps.errMsg}</span>}
+        {fieldProps.errMsg && (
+          <Text type="danger" style={{ marginLeft: 8, fontSize: 12 }}>
+            {fieldProps.errMsg}
+          </Text>
+        )}
+        {isValidating && (
+          <Text type="secondary" style={{ marginLeft: 8, fontSize: 12 }}>
+            验证中...
+          </Text>
+        )}
       </div>
     </div>
   );
 };
 
 const SubmitButton = ({ children }) => {
-  const { isLoading, isPass, onClick } = useSubmit();
+  const { isLoading, onClick } = useSubmit();
   return (
-    <button onClick={onClick} disabled={isLoading || !isPass} style={{ padding: '8px 16px', marginRight: 8 }}>
-      {isLoading ? '提交中...' : children}
-    </button>
+    <Button type="primary" onClick={onClick} loading={isLoading} style={{ marginRight: 8 }}>
+      {children}
+    </Button>
   );
 };
 
 const ResetButton = () => {
   const { onClick } = useReset();
-  return <button onClick={onClick} style={{ padding: '8px 16px' }}>重置</button>;
+  return <Button onClick={onClick}>重置</Button>;
 };
 
 const BaseExample = () => {
   const ref = useRef(null);
   return (
-    <div>
-      <h3>字段关联示例</h3>
-      <ReactForm
-        debug
-        onSubmit={data => {
-          console.log('submit:', data);
-          message.success('提交成功: ' + JSON.stringify(data, null, 2));
-        }}
-      >
-        <div style={{ padding: 16, marginBottom: 20, background: '#f9f9f9', borderRadius: 8 }}>
-          <h4>1. 单字段关联 - 描述跟随名称</h4>
-          <Input name="name" label="名称" rule="REQ LEN-0-10" />
-          <Input
-            name="des"
-            label="描述"
-            rule="LEN-0-10"
-            associations={{
-              fields: [{ name: 'name' }],
-              callback: ({ target, origin }) => {
-                return origin.value;
-              }
-            }}
-          />
-        </div>
+    <div style={{ padding: 24, background: '#f5f5f5', minHeight: '100vh' }}>
+      <Card title="字段关联示例" bordered={false}>
+        <ReactForm
+          debug
+          onSubmit={data => {
+            console.log('submit:', data);
+            message.success('提交成功: ' + JSON.stringify(data, null, 2));
+          }}
+        >
+          <Card type="inner" title={<Space>1. 单字段关联<Tag color="blue">描述跟随名称</Tag></Space>} style={{ marginBottom: 16 }}>
+            <Input name="name" label="名称" rule="REQ LEN-0-10" />
+            <Input
+              name="des"
+              label="描述"
+              rule="LEN-0-10"
+              associations={{
+                fields: [{ name: 'name' }],
+                callback: ({ target, origin }) => {
+                  return origin.value;
+                }
+              }}
+            />
+          </Card>
 
-        <Divider />
+          <Card type="inner" title={<Space>2. 多字段关联<Tag color="green">姓名拼接全名</Tag></Space>} style={{ marginBottom: 16 }}>
+            <Space wrap>
+              <Input name="familyName" label="姓" rule="REQ LEN-0-10" />
+              <Input name="firstName" label="名" rule="REQ LEN-0-10" />
+            </Space>
+            <Input
+              name="fullName"
+              label="全名"
+              rule="LEN-0-20"
+              associations={{
+                fields: [{ name: 'familyName' }, { name: 'firstName' }],
+                callback: ({ target, openApi }) => {
+                  const { firstName, familyName } = openApi.getFormData();
+                  return firstName && familyName ? `${familyName}${firstName}` : '';
+                }
+              }}
+            />
+          </Card>
 
-        <div style={{ padding: 16, marginBottom: 20, background: '#f9f9f9', borderRadius: 8 }}>
-          <h4>2. 多字段关联 - 姓名拼接全名</h4>
-          <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
-            <Input name="familyName" label="姓" rule="REQ LEN-0-10" />
-            <Input name="firstName" label="名" rule="REQ LEN-0-10" />
+          <Card type="inner" title={<Space>3. 计算关联<Tag color="orange">金额除以比例</Tag></Space>} style={{ marginBottom: 16 }}>
+            <Space wrap>
+              <Input name="money" label="总金额" />
+              <Input name="ratio" label="比例" />
+            </Space>
+            <Input
+              name="all"
+              label="每份金额"
+              associations={{
+                fields: [{ name: 'money' }, { name: 'ratio' }],
+                callback: ({ target, openApi }) => {
+                  const { money, ratio } = openApi.getFormData();
+                  const numMoney = parseFloat(money) || 0;
+                  const numRatio = parseFloat(ratio) || 1;
+                  return numRatio > 0 ? (numMoney / numRatio).toFixed(2) : '';
+                }
+              }}
+            />
+          </Card>
+
+          <Card type="inner" title={<Space>4. 分组关联<Tag color="purple">汇总求和</Tag></Space>} style={{ marginBottom: 16 }}>
+            <Button type="primary" onClick={() => ref.current.onAdd()} style={{ marginBottom: 12 }}>
+              添加数量项
+            </Button>
+            <GroupList ref={ref} name="group" defaultLength={2}>
+              {({ index, onRemove }) => (
+                <Space key={index} style={{ padding: 12, background: '#f0f0f0', borderRadius: 6, marginBottom: 8, width: '100%' }}>
+                  <Tag color="blue">项 {index + 1}</Tag>
+                  <Input name="sum" label="数量" />
+                  <Button danger size="small" onClick={onRemove}>
+                    删除
+                  </Button>
+                </Space>
+              )}
+            </GroupList>
+            <Input
+              name="amount"
+              label="总数"
+              associations={{
+                fields: [{ name: 'sum', groupName: 'group' }],
+                callback: ({ target, openApi }) => {
+                  const { group } = openApi.getFormData();
+                  const total = (group || [])
+                    .filter(item => item.sum > 0)
+                    .reduce((a, b) => a + parseInt(b.sum), 0);
+                  return total > 0 ? total.toString() : '';
+                }
+              }}
+            />
+          </Card>
+
+          <div style={{ marginTop: 16 }}>
+            <Space>
+              <SubmitButton>提交</SubmitButton>
+              <ResetButton />
+            </Space>
           </div>
-          <Input
-            name="fullName"
-            label="全名"
-            rule="LEN-0-20"
-            associations={{
-              fields: [{ name: 'familyName' }, { name: 'firstName' }],
-              callback: ({ target, openApi }) => {
-                const { firstName, familyName } = openApi.getFormData();
-                return firstName && familyName ? `${familyName}${firstName}` : '';
-              }
-            }}
-          />
-        </div>
-
-        <Divider />
-
-        <div style={{ padding: 16, marginBottom: 20, background: '#f9f9f9', borderRadius: 8 }}>
-          <h4>3. 计算关联 - 金额除以比例</h4>
-          <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
-            <Input name="money" label="总金额" />
-            <Input name="ratio" label="比例" />
-          </div>
-          <Input
-            name="all"
-            label="每份金额"
-            associations={{
-              fields: [{ name: 'money' }, { name: 'ratio' }],
-              callback: ({ target, openApi }) => {
-                const { money, ratio } = openApi.getFormData();
-                const numMoney = parseFloat(money) || 0;
-                const numRatio = parseFloat(ratio) || 1;
-                return numRatio > 0 ? (numMoney / numRatio).toFixed(2) : '';
-              }
-            }}
-          />
-        </div>
-
-        <Divider />
-
-        <div style={{ padding: 16, marginBottom: 20, background: '#f9f9f9', borderRadius: 8 }}>
-          <h4>4. 分组关联 - 汇总求和</h4>
-          <Button type="primary" onClick={() => ref.current.onAdd()} style={{ marginBottom: 12 }}>
-            添加数量项
-          </Button>
-          <GroupList ref={ref} name="group" defaultLength={2}>
-            {({ index, onRemove }) => (
-              <div
-                key={index}
-                style={{
-                  padding: 12,
-                  marginBottom: 8,
-                  background: '#e8e8e8',
-                  borderRadius: 4,
-                  display: 'flex',
-                  gap: 16,
-                  alignItems: 'center'
-                }}
-              >
-                <span>项 {index + 1}</span>
-                <Input name="sum" label="数量" />
-                <Button danger size="small" onClick={onRemove}>
-                  删除
-                </Button>
-              </div>
-            )}
-          </GroupList>
-          <Input
-            name="amount"
-            label="总数"
-            associations={{
-              fields: [{ name: 'sum', groupName: 'group' }],
-              callback: ({ target, openApi }) => {
-                const { group } = openApi.getFormData();
-                const total = (group || [])
-                  .filter(item => item.sum > 0)
-                  .reduce((a, b) => a + parseInt(b.sum), 0);
-                return total > 0 ? total.toString() : '';
-              }
-            }}
-          />
-        </div>
-
-        <div style={{ marginTop: 20 }}>
-          <SubmitButton>提交</SubmitButton>
-          <ResetButton />
-        </div>
-      </ReactForm>
+        </ReactForm>
+      </Card>
     </div>
   );
 };

@@ -742,65 +742,83 @@ formApiRef.current.onDestroy(() => {
 
 ### 示例
 
-
-#### 示例样式
-
-```scss
-.ant-card {
-  border-color: black;
-  text-align: center;
-  width: 200px;
-}
-```
-
 #### 示例代码
 
 - 基本示例
 - 展示基本的表单使用方式，包括表单绑定、验证规则、提交和重置
-- _ReactForm(@kne/current-lib_react-form)
+- _ReactForm(@kne/current-lib_react-form),antd(antd)
 
 ```jsx
 const { default: ReactForm, useField, useSubmit, useReset } = _ReactForm;
+const { Input: AntInput, Button, Space, Card, Alert, Typography, message } = antd;
+const { Text } = Typography;
+
+// ========================================
+// 通用组件
+// ========================================
 
 const Input = props => {
   const fieldProps = useField(props);
+  const isError = fieldProps.errState === 2;
+  const isValidating = fieldProps.errState === 3;
 
   return (
     <div style={{ marginBottom: 16 }}>
-      <label>{fieldProps.label}</label>
+      <div style={{ marginBottom: 4 }}>
+        <Text type={isError ? 'danger' : undefined}>{fieldProps.label}</Text>
+      </div>
       <div>
-        <input
+        <AntInput
           ref={fieldProps.fieldRef}
-          type="text"
+          type={props.type || 'text'}
           value={fieldProps.value || ''}
-          onChange={fieldProps.onChange}
+          onChange={e => fieldProps.onChange(e.target.value)}
           onBlur={fieldProps.triggerValidate}
-          style={{ padding: 8, border: '1px solid #ddd', borderRadius: 4, width: 200 }}
+          placeholder={props.placeholder}
+          status={isError ? 'error' : undefined}
+          style={{ width: props.width || 200 }}
         />
-        {fieldProps.errMsg && <span style={{ color: 'red', marginLeft: 8 }}>{fieldProps.errMsg}</span>}
+        {fieldProps.errMsg && (
+          <Text type="danger" style={{ marginLeft: 8, fontSize: 12 }}>
+            {fieldProps.errMsg}
+          </Text>
+        )}
+        {isValidating && (
+          <Text type="secondary" style={{ marginLeft: 8, fontSize: 12 }}>
+            验证中...
+          </Text>
+        )}
       </div>
     </div>
   );
 };
 
-const SubmitButton = ({ children }) => {
+const SubmitButton = ({ children, isPassButton = false }) => {
   const { isLoading, isPass, onClick } = useSubmit();
   return (
-    <button onClick={onClick} disabled={isLoading || !isPass} style={{ padding: '8px 16px', marginRight: 8 }}>
-      {isLoading ? '提交中...' : children}
-    </button>
+    <Button
+      type="primary"
+      onClick={onClick}
+      disabled={isPassButton ? (isLoading || !isPass) : isLoading}
+      loading={isLoading}
+    >
+      {children}
+    </Button>
   );
 };
 
 const ResetButton = () => {
   const { onClick } = useReset();
-  return <button onClick={onClick} style={{ padding: '8px 16px' }}>重置</button>;
+  return <Button onClick={onClick}>重置</Button>;
 };
+
+// ========================================
+// 基本表单示例
+// ========================================
 
 const BaseExample = () => {
   return (
-    <div>
-      <h3>基本表单示例</h3>
+    <Card title="基本表单示例" style={{ marginBottom: 24 }}>
       <ReactForm
         debug
         data={{ name: '哈哈哈' }}
@@ -811,22 +829,133 @@ const BaseExample = () => {
             }, 3000);
           });
           console.log('submit:', data);
-          alert('提交成功: ' + JSON.stringify(data, null, 2));
+          message.success('提交成功: ' + JSON.stringify(data, null, 2));
         }}
       >
         <Input name="name" label="名称" rule="REQ LEN-0-10" />
         <Input name="email" label="邮箱" rule="REQ EMAIL" />
         <Input name="phone" label="手机号" rule="REQ TEL" />
-        <div>
+        <Space>
           <SubmitButton>提交</SubmitButton>
           <ResetButton />
-        </div>
+        </Space>
       </ReactForm>
+    </Card>
+  );
+};
+
+// ========================================
+// isPass 测试示例
+// ========================================
+
+const IsPassStatusDisplay = () => {
+  const { isPass } = useSubmit();
+  return (
+    <Alert
+      message={`表单验证状态：${isPass ? '全部通过' : '存在错误'}`}
+      description={isPass ? '所有字段验证通过，可以提交' : '请检查并修正错误信息'}
+      type={isPass ? 'success' : 'error'}
+      showIcon
+      style={{ marginBottom: 20 }}
+    />
+  );
+};
+
+const IsPassExample = () => {
+  return (
+    <Card title="isPass 测试示例" extra={
+      <Text type="secondary" style={{ fontSize: 12 }}>
+        所有字段在输入停止后（失焦）触发校验
+      </Text>
+    }>
+      <ReactForm
+        debug
+        data={{
+          username: '',
+          email: '',
+          password: '',
+          confirmPassword: '',
+          age: ''
+        }}
+        onSubmit={async data => {
+          await new Promise(resolve => {
+            setTimeout(() => {
+              resolve();
+            }, 1000);
+          });
+          console.log('submit:', data);
+          message.success('提交成功: ' + JSON.stringify(data, null, 2));
+        }}
+      >
+        <IsPassStatusDisplay />
+
+        <div style={{ marginBottom: 16 }}>
+          <Text strong>基本信息</Text>
+        </div>
+        <Input
+          name="username"
+          label="用户名"
+          rule="REQ LEN-3-20"
+          placeholder="请输入用户名（3-20字符）"
+          width={250}
+        />
+        <Input
+          name="email"
+          label="邮箱"
+          rule="REQ EMAIL"
+          placeholder="请输入邮箱地址"
+          width={250}
+        />
+        <Input
+          name="age"
+          label="年龄"
+          rule="REQ LEN-1-3"
+          placeholder="请输入年龄（1-3位数字）"
+          width={250}
+        />
+
+        <div style={{ marginBottom: 16, marginTop: 16 }}>
+          <Text strong>安全信息</Text>
+        </div>
+        <Input
+          name="password"
+          label="密码"
+          rule="REQ LEN-6-20"
+          placeholder="请输入密码（6-20字符）"
+          type="password"
+          width={250}
+        />
+        <Input
+          name="confirmPassword"
+          label="确认密码"
+          rule="REQ LEN-6-20"
+          placeholder="请再次输入密码"
+          type="password"
+          width={250}
+        />
+
+        <SubmitButton isPassButton>提交注册</SubmitButton>
+      </ReactForm>
+    </Card>
+  );
+};
+
+// ========================================
+// 主组件
+// ========================================
+
+const App = () => {
+  return (
+    <div style={{ padding: 24, background: '#f5f5f5', minHeight: '100vh' }}>
+      <Space direction="vertical" style={{ width: '100%' }} size="large">
+        <BaseExample />
+        <IsPassExample />
+      </Space>
     </div>
   );
 };
 
-render(<BaseExample />);
+render(<App />);
 
 ```
 
@@ -837,97 +966,114 @@ render(<BaseExample />);
 ```jsx
 const { default: ReactForm, useField, useSubmit, useReset } = _ReactForm;
 const { useRef } = React;
-const { Button, Space, Divider, message } = antd;
+const { Button, Space, Card, Input: AntInput, Divider, Typography, message } = antd;
+const { Text } = Typography;
 
 const Input = props => {
   const fieldProps = useField(props);
+  const isError = fieldProps.errState === 2;
+  const isValidating = fieldProps.errState === 3;
 
   return (
     <div style={{ marginBottom: 16 }}>
-      <label>{fieldProps.label}</label>
+      <div style={{ marginBottom: 4 }}>
+        <Text type={isError ? 'danger' : undefined}>{fieldProps.label}</Text>
+      </div>
       <div>
-        <input
+        <AntInput
           ref={fieldProps.fieldRef}
           type="text"
           value={fieldProps.value || ''}
-          onChange={fieldProps.onChange}
+          onChange={e => fieldProps.onChange(e.target.value)}
           onBlur={fieldProps.triggerValidate}
-          style={{ padding: 8, border: '1px solid #ddd', borderRadius: 4, width: 200 }}
+          status={isError ? 'error' : undefined}
+          style={{ width: 200 }}
         />
-        {fieldProps.errMsg && <span style={{ color: 'red', marginLeft: 8 }}>{fieldProps.errMsg}</span>}
+        {fieldProps.errMsg && (
+          <Text type="danger" style={{ marginLeft: 8, fontSize: 12 }}>
+            {fieldProps.errMsg}
+          </Text>
+        )}
+        {isValidating && (
+          <Text type="secondary" style={{ marginLeft: 8, fontSize: 12 }}>
+            验证中...
+          </Text>
+        )}
       </div>
     </div>
   );
 };
 
 const SubmitButton = ({ children }) => {
-  const { isLoading, isPass, onClick } = useSubmit();
+  const { isLoading, onClick } = useSubmit();
   return (
-    <button onClick={onClick} disabled={isLoading || !isPass} style={{ padding: '8px 16px', marginRight: 8 }}>
-      {isLoading ? '提交中...' : children}
-    </button>
+    <Button type="primary" onClick={onClick} loading={isLoading} style={{ marginRight: 8 }}>
+      {children}
+    </Button>
   );
 };
 
 const ResetButton = () => {
   const { onClick } = useReset();
-  return <button onClick={onClick} style={{ padding: '8px 16px' }}>重置</button>;
+  return <Button onClick={onClick}>重置</Button>;
 };
 
 const BaseExample = () => {
   const formApiRef = useRef();
   return (
-    <div>
-      <h3>ref 操作 API 示例</h3>
-      <Space direction="vertical" style={{ marginBottom: 20 }}>
-        <Space wrap>
-          <Button type="primary" onClick={() => {
-            const data = formApiRef.current.data;
-            console.log('表单数据:', data);
-            message.success('请查看控制台');
-          }}>
-            获取表单值
-          </Button>
-          <Button onClick={() => {
-            formApiRef.current.setField({ name: 'name', value: '设置的新名称' });
-          }}>
-            设置 name 字段值
-          </Button>
-          <Button onClick={() => {
-            formApiRef.current.setFields([
-              { name: 'name', value: '张三' },
-              { name: 'email', value: 'zhangsan@example.com' },
-              { name: 'phone', value: '13800138000' }
-            ]);
-          }}>
-            批量设置字段值
-          </Button>
-          <Button danger onClick={() => {
-            formApiRef.current.setFieldValidate({
-              name: 'email',
-              validate: { status: 2, msg: '邮箱格式不正确' }
-            });
-          }}>
-            设置校验错误
-          </Button>
-          <Button onClick={() => {
-            formApiRef.current.reset();
-          }}>
-            重置表单
-          </Button>
-        </Space>
-        <Divider />
-      </Space>
+    <div style={{ padding: 24, background: '#f5f5f5', minHeight: '100vh' }}>
+      <Card title="ref 操作 API 示例" bordered={false}>
+        <Card type="inner" title="操作面板" style={{ marginBottom: 16 }}>
+          <Space wrap>
+            <Button type="primary" onClick={() => {
+              const data = formApiRef.current.data;
+              console.log('表单数据:', data);
+              message.success('请查看控制台');
+            }}>
+              获取表单值
+            </Button>
+            <Button onClick={() => {
+              formApiRef.current.setField({ name: 'name', value: '设置的新名称' });
+            }}>
+              设置 name 字段值
+            </Button>
+            <Button onClick={() => {
+              formApiRef.current.setFields([
+                { name: 'name', value: '张三' },
+                { name: 'email', value: 'zhangsan@example.com' },
+                { name: 'phone', value: '13800138000' }
+              ]);
+            }}>
+              批量设置字段值
+            </Button>
+            <Button danger onClick={() => {
+              formApiRef.current.setFieldValidate({
+                name: 'email',
+                validate: { status: 2, msg: '邮箱格式不正确' }
+              });
+            }}>
+              设置校验错误
+            </Button>
+            <Button onClick={() => {
+              formApiRef.current.reset();
+            }}>
+              重置表单
+            </Button>
+          </Space>
+        </Card>
 
-      <ReactForm ref={formApiRef}>
-        <Input name="name" label="姓名" rule="REQ LEN-0-10" />
-        <Input name="email" label="邮箱" rule="REQ EMAIL" />
-        <Input name="phone" label="手机号" rule="REQ TEL" />
-        <div>
-          <SubmitButton>提交</SubmitButton>
-          <ResetButton />
-        </div>
-      </ReactForm>
+        <ReactForm ref={formApiRef}>
+          <Input name="name" label="姓名" rule="REQ LEN-0-10" />
+          <Input name="email" label="邮箱" rule="REQ EMAIL" />
+          <Input name="phone" label="手机号" rule="REQ TEL" />
+          <div>
+            <Space>
+              <SubmitButton>提交</SubmitButton>
+              <ResetButton />
+            </Space>
+          </div>
+        </ReactForm>
+      </Card>
     </div>
   );
 };
@@ -943,49 +1089,63 @@ render(<BaseExample />);
 ```jsx
 const { default: ReactForm, useField, useSubmit, useReset, useFormApi } = _ReactForm;
 const { useRef } = React;
-const { Button, Space, Divider, message } = antd;
+const { Button, Space, Card, Input: AntInput, Divider, Typography, message } = antd;
+const { Text } = Typography;
 
 const Input = props => {
   const fieldProps = useField(props);
+  const isError = fieldProps.errState === 2;
+  const isValidating = fieldProps.errState === 3;
 
   return (
     <div style={{ marginBottom: 16 }}>
-      <label>{fieldProps.label}</label>
+      <div style={{ marginBottom: 4 }}>
+        <Text type={isError ? 'danger' : undefined}>{fieldProps.label}</Text>
+      </div>
       <div>
-        <input
+        <AntInput
           ref={fieldProps.fieldRef}
           type="text"
           value={fieldProps.value || ''}
-          onChange={fieldProps.onChange}
+          onChange={e => fieldProps.onChange(e.target.value)}
           onBlur={fieldProps.triggerValidate}
-          style={{ padding: 8, border: '1px solid #ddd', borderRadius: 4, width: 200 }}
+          status={isError ? 'error' : undefined}
+          style={{ width: 200 }}
         />
-        {fieldProps.errMsg && <span style={{ color: 'red', marginLeft: 8 }}>{fieldProps.errMsg}</span>}
+        {fieldProps.errMsg && (
+          <Text type="danger" style={{ marginLeft: 8, fontSize: 12 }}>
+            {fieldProps.errMsg}
+          </Text>
+        )}
+        {isValidating && (
+          <Text type="secondary" style={{ marginLeft: 8, fontSize: 12 }}>
+            验证中...
+          </Text>
+        )}
       </div>
     </div>
   );
 };
 
 const SubmitButton = ({ children }) => {
-  const { isLoading, isPass, onClick } = useSubmit();
+  const { isLoading, onClick } = useSubmit();
   return (
-    <button onClick={onClick} disabled={isLoading || !isPass} style={{ padding: '8px 16px', marginRight: 8 }}>
-      {isLoading ? '提交中...' : children}
-    </button>
+    <Button type="primary" onClick={onClick} loading={isLoading} style={{ marginRight: 8 }}>
+      {children}
+    </Button>
   );
 };
 
 const ResetButton = () => {
   const { onClick } = useReset();
-  return <button onClick={onClick} style={{ padding: '8px 16px' }}>重置</button>;
+  return <Button onClick={onClick}>重置</Button>;
 };
 
 const Options = () => {
   const { openApi: formApi } = useFormApi();
 
   return (
-    <div style={{ marginBottom: 20, padding: 16, background: '#f5f5f5', borderRadius: 8 }}>
-      <h4>操作面板 (useFormApi)</h4>
+    <Card type="inner" title="操作面板 (useFormApi)" style={{ marginBottom: 16 }}>
       <Space wrap>
         <Button type="primary" onClick={() => {
           const data = formApi.getFormData();
@@ -1022,25 +1182,28 @@ const Options = () => {
           重置表单
         </Button>
       </Space>
-    </div>
+    </Card>
   );
 };
 
 const BaseExample = () => {
   const formApiRef = useRef();
   return (
-    <div>
-      <h3>useFormApi Hook 示例</h3>
-      <ReactForm ref={formApiRef}>
-        <Options />
-        <Input name="name" label="姓名" rule="REQ LEN-0-10" />
-        <Input name="email" label="邮箱" rule="REQ EMAIL" />
-        <Input name="phone" label="手机号" rule="REQ TEL" />
-        <div>
-          <SubmitButton>提交</SubmitButton>
-          <ResetButton />
-        </div>
-      </ReactForm>
+    <div style={{ padding: 24, background: '#f5f5f5', minHeight: '100vh' }}>
+      <Card title="useFormApi Hook 示例" bordered={false}>
+        <ReactForm ref={formApiRef}>
+          <Options />
+          <Input name="name" label="姓名" rule="REQ LEN-0-10" />
+          <Input name="email" label="邮箱" rule="REQ EMAIL" />
+          <Input name="phone" label="手机号" rule="REQ TEL" />
+          <div>
+            <Space>
+              <SubmitButton>提交</SubmitButton>
+              <ResetButton />
+            </Space>
+          </div>
+        </ReactForm>
+      </Card>
     </div>
   );
 };
@@ -1056,39 +1219,59 @@ render(<BaseExample />);
 ```jsx
 const { default: ReactForm, useField, useSubmit, useReset, GroupList } = _ReactForm;
 const { useRef } = React;
-const { Button, Space, message } = antd;
+const { Button, Space, Card, Input: AntInput, Tag, Typography, message } = antd;
+const { Text } = Typography;
 
 const Input = props => {
   const fieldProps = useField(props);
+  const isError = fieldProps.errState === 2;
+  const isValidating = fieldProps.errState === 3;
 
   return (
     <div style={{ marginBottom: 8 }}>
-      <label style={{ fontSize: 12 }}>{fieldProps.label}</label>
-      <input
-        ref={fieldProps.fieldRef}
-        type="text"
-        value={fieldProps.value || ''}
-        onChange={fieldProps.onChange}
-        onBlur={fieldProps.triggerValidate}
-        style={{ padding: 6, border: '1px solid #ddd', borderRadius: 4, width: 120, fontSize: 12 }}
-      />
-      {fieldProps.errMsg && <span style={{ color: 'red', marginLeft: 4, fontSize: 12 }}>{fieldProps.errMsg}</span>}
+      <div style={{ marginBottom: 4 }}>
+        <Text type={isError ? 'danger' : undefined} style={{ fontSize: 12 }}>
+          {fieldProps.label}
+        </Text>
+      </div>
+      <div>
+        <AntInput
+          ref={fieldProps.fieldRef}
+          type="text"
+          value={fieldProps.value || ''}
+          onChange={e => fieldProps.onChange(e.target.value)}
+          onBlur={fieldProps.triggerValidate}
+          status={isError ? 'error' : undefined}
+          size="small"
+          style={{ width: 120 }}
+        />
+        {fieldProps.errMsg && (
+          <Text type="danger" style={{ marginLeft: 4, fontSize: 12 }}>
+            {fieldProps.errMsg}
+          </Text>
+        )}
+        {isValidating && (
+          <Text type="secondary" style={{ marginLeft: 4, fontSize: 12 }}>
+            验证中...
+          </Text>
+        )}
+      </div>
     </div>
   );
 };
 
 const SubmitButton = ({ children }) => {
-  const { isLoading, isPass, onClick } = useSubmit();
+  const { isLoading, onClick } = useSubmit();
   return (
-    <button onClick={onClick} disabled={isLoading || !isPass} style={{ padding: '8px 16px', marginRight: 8 }}>
-      {isLoading ? '提交中...' : children}
-    </button>
+    <Button type="primary" onClick={onClick} loading={isLoading} style={{ marginRight: 8 }}>
+      {children}
+    </Button>
   );
 };
 
 const ResetButton = () => {
   const { onClick } = useReset();
-  return <button onClick={onClick} style={{ padding: '8px 16px' }}>重置</button>;
+  return <Button onClick={onClick}>重置</Button>;
 };
 
 const BaseExample = () => {
@@ -1096,8 +1279,36 @@ const BaseExample = () => {
   const formApiRef = useRef();
 
   return (
-    <div>
-      <h3>动态分组示例</h3>
+    <div style={{ padding: 24, background: '#f5f5f5', minHeight: '100vh' }}>
+      <Card title="动态分组示例" bordered={false}>
+        <Space wrap style={{ marginBottom: 20 }}>
+          <Button type="primary" onClick={() => {
+            formApiRef.current.setField({
+              name: 'name',
+              groupName: 'group',
+              groupIndex: 0,
+              value: '第一项名称'
+            });
+          }}>
+            设置第一项名称
+          </Button>
+          <Button onClick={() => {
+            formApiRef.current.setField({
+              name: 'name',
+              groupName: 'group',
+              value: '所有项名称'
+            });
+          }}>
+            设置所有项名称
+          </Button>
+          <Button onClick={() => {
+            formApiRef.current.setFormData({
+              group: [{ name: '张三', des: '描述1' }, { name: '李四', des: '描述2' }, { name: '王五', des: '描述3' }]
+            });
+          }}>
+            批量设置数据
+          </Button>
+        </Space>
       <Space wrap style={{ marginBottom: 20 }}>
         <Button type="primary" onClick={() => {
           formApiRef.current.setField({
@@ -1208,10 +1419,13 @@ const BaseExample = () => {
         </GroupList>
 
         <div style={{ marginTop: 20 }}>
-          <SubmitButton>提交</SubmitButton>
-          <ResetButton />
+          <Space>
+            <SubmitButton>提交</SubmitButton>
+            <ResetButton />
+          </Space>
         </div>
       </ReactForm>
+      </Card>
     </div>
   );
 };
@@ -1227,167 +1441,164 @@ render(<BaseExample />);
 ```jsx
 const { default: ReactForm, useField, useSubmit, useReset, GroupList } = _ReactForm;
 const { useRef } = React;
-const { Button, Divider, message } = antd;
+const { Button, Space, Card, Input: AntInput, Tag, Typography, message } = antd;
+const { Text } = Typography;
 
 const Input = props => {
   const fieldProps = useField(props);
+  const isError = fieldProps.errState === 2;
+  const isValidating = fieldProps.errState === 3;
 
   return (
     <div style={{ marginBottom: 16 }}>
-      <label>{fieldProps.label}</label>
+      <div style={{ marginBottom: 4 }}>
+        <Text type={isError ? 'danger' : undefined}>{fieldProps.label}</Text>
+      </div>
       <div>
-        <input
+        <AntInput
           {...fieldProps.associationOptions}
           ref={fieldProps.fieldRef}
           type="text"
           value={fieldProps.value || ''}
-          onChange={fieldProps.onChange}
+          onChange={e => fieldProps.onChange(e.target.value)}
           onBlur={fieldProps.triggerValidate}
-          style={{ padding: 8, border: '1px solid #ddd', borderRadius: 4, width: 200 }}
+          status={isError ? 'error' : undefined}
+          style={{ width: 200 }}
         />
-        {fieldProps.errMsg && <span style={{ color: 'red', marginLeft: 8 }}>{fieldProps.errMsg}</span>}
+        {fieldProps.errMsg && (
+          <Text type="danger" style={{ marginLeft: 8, fontSize: 12 }}>
+            {fieldProps.errMsg}
+          </Text>
+        )}
+        {isValidating && (
+          <Text type="secondary" style={{ marginLeft: 8, fontSize: 12 }}>
+            验证中...
+          </Text>
+        )}
       </div>
     </div>
   );
 };
 
 const SubmitButton = ({ children }) => {
-  const { isLoading, isPass, onClick } = useSubmit();
+  const { isLoading, onClick } = useSubmit();
   return (
-    <button onClick={onClick} disabled={isLoading || !isPass} style={{ padding: '8px 16px', marginRight: 8 }}>
-      {isLoading ? '提交中...' : children}
-    </button>
+    <Button type="primary" onClick={onClick} loading={isLoading} style={{ marginRight: 8 }}>
+      {children}
+    </Button>
   );
 };
 
 const ResetButton = () => {
   const { onClick } = useReset();
-  return <button onClick={onClick} style={{ padding: '8px 16px' }}>重置</button>;
+  return <Button onClick={onClick}>重置</Button>;
 };
 
 const BaseExample = () => {
   const ref = useRef(null);
   return (
-    <div>
-      <h3>字段关联示例</h3>
-      <ReactForm
-        debug
-        onSubmit={data => {
-          console.log('submit:', data);
-          message.success('提交成功: ' + JSON.stringify(data, null, 2));
-        }}
-      >
-        <div style={{ padding: 16, marginBottom: 20, background: '#f9f9f9', borderRadius: 8 }}>
-          <h4>1. 单字段关联 - 描述跟随名称</h4>
-          <Input name="name" label="名称" rule="REQ LEN-0-10" />
-          <Input
-            name="des"
-            label="描述"
-            rule="LEN-0-10"
-            associations={{
-              fields: [{ name: 'name' }],
-              callback: ({ target, origin }) => {
-                return origin.value;
-              }
-            }}
-          />
-        </div>
+    <div style={{ padding: 24, background: '#f5f5f5', minHeight: '100vh' }}>
+      <Card title="字段关联示例" bordered={false}>
+        <ReactForm
+          debug
+          onSubmit={data => {
+            console.log('submit:', data);
+            message.success('提交成功: ' + JSON.stringify(data, null, 2));
+          }}
+        >
+          <Card type="inner" title={<Space>1. 单字段关联<Tag color="blue">描述跟随名称</Tag></Space>} style={{ marginBottom: 16 }}>
+            <Input name="name" label="名称" rule="REQ LEN-0-10" />
+            <Input
+              name="des"
+              label="描述"
+              rule="LEN-0-10"
+              associations={{
+                fields: [{ name: 'name' }],
+                callback: ({ target, origin }) => {
+                  return origin.value;
+                }
+              }}
+            />
+          </Card>
 
-        <Divider />
+          <Card type="inner" title={<Space>2. 多字段关联<Tag color="green">姓名拼接全名</Tag></Space>} style={{ marginBottom: 16 }}>
+            <Space wrap>
+              <Input name="familyName" label="姓" rule="REQ LEN-0-10" />
+              <Input name="firstName" label="名" rule="REQ LEN-0-10" />
+            </Space>
+            <Input
+              name="fullName"
+              label="全名"
+              rule="LEN-0-20"
+              associations={{
+                fields: [{ name: 'familyName' }, { name: 'firstName' }],
+                callback: ({ target, openApi }) => {
+                  const { firstName, familyName } = openApi.getFormData();
+                  return firstName && familyName ? `${familyName}${firstName}` : '';
+                }
+              }}
+            />
+          </Card>
 
-        <div style={{ padding: 16, marginBottom: 20, background: '#f9f9f9', borderRadius: 8 }}>
-          <h4>2. 多字段关联 - 姓名拼接全名</h4>
-          <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
-            <Input name="familyName" label="姓" rule="REQ LEN-0-10" />
-            <Input name="firstName" label="名" rule="REQ LEN-0-10" />
+          <Card type="inner" title={<Space>3. 计算关联<Tag color="orange">金额除以比例</Tag></Space>} style={{ marginBottom: 16 }}>
+            <Space wrap>
+              <Input name="money" label="总金额" />
+              <Input name="ratio" label="比例" />
+            </Space>
+            <Input
+              name="all"
+              label="每份金额"
+              associations={{
+                fields: [{ name: 'money' }, { name: 'ratio' }],
+                callback: ({ target, openApi }) => {
+                  const { money, ratio } = openApi.getFormData();
+                  const numMoney = parseFloat(money) || 0;
+                  const numRatio = parseFloat(ratio) || 1;
+                  return numRatio > 0 ? (numMoney / numRatio).toFixed(2) : '';
+                }
+              }}
+            />
+          </Card>
+
+          <Card type="inner" title={<Space>4. 分组关联<Tag color="purple">汇总求和</Tag></Space>} style={{ marginBottom: 16 }}>
+            <Button type="primary" onClick={() => ref.current.onAdd()} style={{ marginBottom: 12 }}>
+              添加数量项
+            </Button>
+            <GroupList ref={ref} name="group" defaultLength={2}>
+              {({ index, onRemove }) => (
+                <Space key={index} style={{ padding: 12, background: '#f0f0f0', borderRadius: 6, marginBottom: 8, width: '100%' }}>
+                  <Tag color="blue">项 {index + 1}</Tag>
+                  <Input name="sum" label="数量" />
+                  <Button danger size="small" onClick={onRemove}>
+                    删除
+                  </Button>
+                </Space>
+              )}
+            </GroupList>
+            <Input
+              name="amount"
+              label="总数"
+              associations={{
+                fields: [{ name: 'sum', groupName: 'group' }],
+                callback: ({ target, openApi }) => {
+                  const { group } = openApi.getFormData();
+                  const total = (group || [])
+                    .filter(item => item.sum > 0)
+                    .reduce((a, b) => a + parseInt(b.sum), 0);
+                  return total > 0 ? total.toString() : '';
+                }
+              }}
+            />
+          </Card>
+
+          <div style={{ marginTop: 16 }}>
+            <Space>
+              <SubmitButton>提交</SubmitButton>
+              <ResetButton />
+            </Space>
           </div>
-          <Input
-            name="fullName"
-            label="全名"
-            rule="LEN-0-20"
-            associations={{
-              fields: [{ name: 'familyName' }, { name: 'firstName' }],
-              callback: ({ target, openApi }) => {
-                const { firstName, familyName } = openApi.getFormData();
-                return firstName && familyName ? `${familyName}${firstName}` : '';
-              }
-            }}
-          />
-        </div>
-
-        <Divider />
-
-        <div style={{ padding: 16, marginBottom: 20, background: '#f9f9f9', borderRadius: 8 }}>
-          <h4>3. 计算关联 - 金额除以比例</h4>
-          <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
-            <Input name="money" label="总金额" />
-            <Input name="ratio" label="比例" />
-          </div>
-          <Input
-            name="all"
-            label="每份金额"
-            associations={{
-              fields: [{ name: 'money' }, { name: 'ratio' }],
-              callback: ({ target, openApi }) => {
-                const { money, ratio } = openApi.getFormData();
-                const numMoney = parseFloat(money) || 0;
-                const numRatio = parseFloat(ratio) || 1;
-                return numRatio > 0 ? (numMoney / numRatio).toFixed(2) : '';
-              }
-            }}
-          />
-        </div>
-
-        <Divider />
-
-        <div style={{ padding: 16, marginBottom: 20, background: '#f9f9f9', borderRadius: 8 }}>
-          <h4>4. 分组关联 - 汇总求和</h4>
-          <Button type="primary" onClick={() => ref.current.onAdd()} style={{ marginBottom: 12 }}>
-            添加数量项
-          </Button>
-          <GroupList ref={ref} name="group" defaultLength={2}>
-            {({ index, onRemove }) => (
-              <div
-                key={index}
-                style={{
-                  padding: 12,
-                  marginBottom: 8,
-                  background: '#e8e8e8',
-                  borderRadius: 4,
-                  display: 'flex',
-                  gap: 16,
-                  alignItems: 'center'
-                }}
-              >
-                <span>项 {index + 1}</span>
-                <Input name="sum" label="数量" />
-                <Button danger size="small" onClick={onRemove}>
-                  删除
-                </Button>
-              </div>
-            )}
-          </GroupList>
-          <Input
-            name="amount"
-            label="总数"
-            associations={{
-              fields: [{ name: 'sum', groupName: 'group' }],
-              callback: ({ target, openApi }) => {
-                const { group } = openApi.getFormData();
-                const total = (group || [])
-                  .filter(item => item.sum > 0)
-                  .reduce((a, b) => a + parseInt(b.sum), 0);
-                return total > 0 ? total.toString() : '';
-              }
-            }}
-          />
-        </div>
-
-        <div style={{ marginTop: 20 }}>
-          <SubmitButton>提交</SubmitButton>
-          <ResetButton />
-        </div>
-      </ReactForm>
+        </ReactForm>
+      </Card>
     </div>
   );
 };
@@ -1402,42 +1613,118 @@ render(<BaseExample />);
 
 ```jsx
 const { default: ReactForm, useField, useSubmit, useReset } = _ReactForm;
-const { message } = antd;
+const { useState, useEffect } = React;
+const { Button, Space, Card, Input: AntInput, Typography, Alert, message, List, Tag, Divider, Descriptions } = antd;
+const { Text } = Typography;
 
 const Input = props => {
   const fieldProps = useField(props);
+  const isError = fieldProps.errState === 2;
+  const isValidating = fieldProps.errState === 3;
 
   return (
     <div style={{ marginBottom: 16 }}>
-      <label>{fieldProps.label}</label>
+      <div style={{ marginBottom: 4 }}>
+        <Text type={isError ? 'danger' : undefined}>{fieldProps.label}</Text>
+      </div>
       <div>
-        <input
-          ref={fieldProps.fieldRef}
-          type="text"
-          value={fieldProps.value || ''}
-          onChange={fieldProps.onChange}
-          onBlur={fieldProps.triggerValidate}
-          style={{ padding: 8, border: '1px solid #ddd', borderRadius: 4, width: 200 }}
-        />
-        {fieldProps.errMsg && <span style={{ color: 'red', marginLeft: 8 }}>{fieldProps.errMsg}</span>}
-        {fieldProps.errState === 3 && <span style={{ color: '#1890ff', marginLeft: 8 }}>验证中...</span>}
+        <AntInput ref={fieldProps.fieldRef} type="text" value={fieldProps.value || ''} onChange={e => fieldProps.onChange(e.target.value)} onBlur={fieldProps.triggerValidate} status={isError ? 'error' : undefined} style={{ width: 200 }} />
+        {fieldProps.errMsg && (
+          <Text type="danger" style={{ marginLeft: 8, fontSize: 12 }}>
+            {fieldProps.errMsg}
+          </Text>
+        )}
+        {isValidating && (
+          <Text type="secondary" style={{ marginLeft: 8, fontSize: 12 }}>
+            验证中...
+          </Text>
+        )}
       </div>
     </div>
   );
 };
 
 const SubmitButton = ({ children }) => {
-  const { isLoading, isPass, onClick } = useSubmit();
+  const { isLoading, onClick } = useSubmit();
   return (
-    <button onClick={onClick} disabled={isLoading || !isPass} style={{ padding: '8px 16px', marginRight: 8 }}>
-      {isLoading ? '提交中...' : children}
-    </button>
+    <Button type="primary" onClick={onClick} loading={isLoading} style={{ marginRight: 8 }}>
+      {children}
+    </Button>
   );
 };
 
 const ResetButton = () => {
   const { onClick } = useReset();
-  return <button onClick={onClick} style={{ padding: '8px 16px' }}>重置</button>;
+  return <Button onClick={onClick}>重置</Button>;
+};
+
+// 校验日志组件
+const ValidationLog = () => {
+  const [logs, setLogs] = useState([]);
+  const listRef = React.useRef(null);
+
+  useEffect(() => {
+    // 拦截 console.log 来捕获验证日志
+    const originalLog = console.log;
+    console.log = (...args) => {
+      const message = args.join(' ');
+      if (message.includes('验证')) {
+        const timestamp = new Date().toLocaleTimeString();
+        setLogs(prev => [...prev, { id: Date.now() + Math.random(), timestamp, message }]);
+      }
+      originalLog.apply(console, args);
+    };
+    return () => {
+      console.log = originalLog;
+    };
+  }, []);
+
+  // 自动滚动到底部
+  useEffect(() => {
+    if (listRef.current) {
+      listRef.current.scrollTop = listRef.current.scrollHeight;
+    }
+  }, [logs]);
+
+  const clearLogs = () => setLogs([]);
+
+  return (
+    <Card title="远程校验过程" size="small" style={{ marginBottom: 20 }}>
+      <Space style={{ marginBottom: 12 }}>
+        <Button size="small" onClick={clearLogs}>清空日志</Button>
+        <Text type="secondary" style={{ fontSize: 12 }}>共 {logs.length} 条记录</Text>
+      </Space>
+      <div ref={listRef} style={{ height: 300, overflowY: 'auto', border: '1px solid #f0f0f0', borderRadius: 4 }}>
+        {logs.length === 0 ? (
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
+            <Text type="secondary" style={{ fontSize: 12 }}>
+              暂无验证日志，请在上方输入框中输入内容触发验证
+            </Text>
+          </div>
+        ) : (
+          <List
+            size="small"
+            dataSource={logs}
+            renderItem={item => {
+              const isStart = item.message.includes('开始验证');
+              const isComplete = item.message.includes('验证完成');
+              return (
+                <List.Item style={{ padding: '8px 12', borderBottom: '1px solid #f0f0f0' }}>
+                  <Space>
+                    <Text type="secondary" style={{ fontSize: 11, minWidth: 70 }}>{item.timestamp}</Text>
+                    <Tag color={isStart ? 'blue' : isComplete ? 'green' : 'default'} style={{ margin: 0 }}>
+                      {isStart ? '开始' : isComplete ? '完成' : '其他'}
+                    </Tag>
+                    <Text style={{ fontSize: 12 }}>{item.message}</Text>
+                  </Space>
+                </List.Item>
+              );
+            }}
+          />
+        )}
+      </div>
+    </Card>
+  );
 };
 
 // 模拟用户名重复检查的远程验证规则
@@ -1482,46 +1769,60 @@ const checkPhoneValid = async value => {
 
 const BaseExample = () => {
   return (
-    <div>
-      <h3>远程验证规则示例</h3>
-      <p style={{ color: '#666', marginBottom: 20 }}>
-        示例展示了如何使用自定义的异步验证规则来模拟远程接口验证
-      </p>
+    <div style={{ padding: 24, background: '#f5f5f5', minHeight: '100vh' }}>
+      <Card title="远程验证规则示例" bordered={false}>
+        <Alert message="异步验证说明" description="示例展示了如何使用自定义的异步验证规则来模拟远程接口验证" type="info" showIcon style={{ marginBottom: 20 }} />
 
-      <ReactForm
-        debug
-        rules={{
-          CHECK_USERNAME: checkUsernameUnique,
-          CHECK_PHONE: checkPhoneValid
-        }}
-        data={{
-          username: '',
-          phone: ''
-        }}
-        onSubmit={async data => {
-          console.log('提交数据:', data);
-          await new Promise(resolve => setTimeout(resolve, 2000));
-          message.success('注册成功: ' + JSON.stringify(data, null, 2));
-        }}
-      >
-        <Input
-          name="username"
-          label="用户名"
-          rule="REQ LEN-3-20 CHECK_USERNAME"
-          placeholder="请输入用户名 (避免使用: admin, test, user, root)"
-        />
-        <Input
-          name="phone"
-          label="手机号"
-          rule="REQ TEL CHECK_PHONE"
-          placeholder="请输入手机号 (避免使用: 13800138000, 13900139000)"
-        />
+        <ValidationLog />
 
-        <div style={{ marginTop: 20 }}>
-          <SubmitButton>注册</SubmitButton>
-          <ResetButton />
-        </div>
-      </ReactForm>
+        <Card type="inner" title="特殊输入值说明" size="small" style={{ marginBottom: 20, backgroundColor: '#fff7e6' }}>
+          <Descriptions column={1} size="small">
+            <Descriptions.Item label="已占用用户名">
+              <Space>
+                <Tag color="red">admin</Tag>
+                <Tag color="red">test</Tag>
+                <Tag color="red">user</Tag>
+                <Tag color="red">root</Tag>
+              </Space>
+            </Descriptions.Item>
+            <Descriptions.Item label="已注册手机号">
+              <Space>
+                <Tag color="red">13800138000</Tag>
+                <Tag color="red">13900139000</Tag>
+              </Space>
+            </Descriptions.Item>
+          </Descriptions>
+          <Text type="secondary" style={{ fontSize: 12 }}>
+            💡 输入以上值会触发验证失败，用于测试错误提示和校验过程
+          </Text>
+        </Card>
+
+        <ReactForm
+          debug
+          rules={{
+            CHECK_USERNAME: checkUsernameUnique,
+            CHECK_PHONE: checkPhoneValid
+          }}
+          data={{
+            username: '',
+            phone: ''
+          }}
+          onSubmit={async data => {
+            console.log('提交数据:', data);
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            message.success('注册成功: ' + JSON.stringify(data, null, 2));
+          }}>
+          <Input name="username" label="用户名" rule="REQ LEN-3-20 CHECK_USERNAME" placeholder="请输入用户名" />
+          <Input name="phone" label="手机号" rule="REQ TEL CHECK_PHONE" placeholder="请输入手机号" />
+
+          <div style={{ marginTop: 20 }}>
+            <Space>
+              <SubmitButton>注册</SubmitButton>
+              <ResetButton />
+            </Space>
+          </div>
+        </ReactForm>
+      </Card>
     </div>
   );
 };

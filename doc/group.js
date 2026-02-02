@@ -1,38 +1,58 @@
 const { default: ReactForm, useField, useSubmit, useReset, GroupList } = _ReactForm;
 const { useRef } = React;
-const { Button, Space, message } = antd;
+const { Button, Space, Card, Input: AntInput, Tag, Typography, message } = antd;
+const { Text } = Typography;
 
 const Input = props => {
   const fieldProps = useField(props);
+  const isError = fieldProps.errState === 2;
+  const isValidating = fieldProps.errState === 3;
 
   return (
     <div style={{ marginBottom: 8 }}>
-      <label style={{ fontSize: 12 }}>{fieldProps.label}</label>
-      <input
-        ref={fieldProps.fieldRef}
-        type="text"
-        value={fieldProps.value || ''}
-        onChange={fieldProps.onChange}
-        onBlur={fieldProps.triggerValidate}
-        style={{ padding: 6, border: '1px solid #ddd', borderRadius: 4, width: 120, fontSize: 12 }}
-      />
-      {fieldProps.errMsg && <span style={{ color: 'red', marginLeft: 4, fontSize: 12 }}>{fieldProps.errMsg}</span>}
+      <div style={{ marginBottom: 4 }}>
+        <Text type={isError ? 'danger' : undefined} style={{ fontSize: 12 }}>
+          {fieldProps.label}
+        </Text>
+      </div>
+      <div>
+        <AntInput
+          ref={fieldProps.fieldRef}
+          type="text"
+          value={fieldProps.value || ''}
+          onChange={e => fieldProps.onChange(e.target.value)}
+          onBlur={fieldProps.triggerValidate}
+          status={isError ? 'error' : undefined}
+          size="small"
+          style={{ width: 120 }}
+        />
+        {fieldProps.errMsg && (
+          <Text type="danger" style={{ marginLeft: 4, fontSize: 12 }}>
+            {fieldProps.errMsg}
+          </Text>
+        )}
+        {isValidating && (
+          <Text type="secondary" style={{ marginLeft: 4, fontSize: 12 }}>
+            验证中...
+          </Text>
+        )}
+      </div>
     </div>
   );
 };
 
 const SubmitButton = ({ children }) => {
-  const { isLoading, isPass, onClick } = useSubmit();
+  const { isLoading, onClick } = useSubmit();
   return (
-    <button onClick={onClick} disabled={isLoading || !isPass} style={{ padding: '8px 16px', marginRight: 8 }}>
-      {isLoading ? '提交中...' : children}
-    </button>
+    <Button type="primary" onClick={onClick} loading={isLoading} style={{ marginRight: 8 }}>
+      {children}
+    </Button>
   );
 };
 
 const ResetButton = () => {
   const { onClick } = useReset();
-  return <button onClick={onClick} style={{ padding: '8px 16px' }}>重置</button>;
+  return <Button onClick={onClick}>重置</Button>;
 };
 
 const BaseExample = () => {
@@ -40,8 +60,36 @@ const BaseExample = () => {
   const formApiRef = useRef();
 
   return (
-    <div>
-      <h3>动态分组示例</h3>
+    <div style={{ padding: 24, background: '#f5f5f5', minHeight: '100vh' }}>
+      <Card title="动态分组示例" bordered={false}>
+        <Space wrap style={{ marginBottom: 20 }}>
+          <Button type="primary" onClick={() => {
+            formApiRef.current.setField({
+              name: 'name',
+              groupName: 'group',
+              groupIndex: 0,
+              value: '第一项名称'
+            });
+          }}>
+            设置第一项名称
+          </Button>
+          <Button onClick={() => {
+            formApiRef.current.setField({
+              name: 'name',
+              groupName: 'group',
+              value: '所有项名称'
+            });
+          }}>
+            设置所有项名称
+          </Button>
+          <Button onClick={() => {
+            formApiRef.current.setFormData({
+              group: [{ name: '张三', des: '描述1' }, { name: '李四', des: '描述2' }, { name: '王五', des: '描述3' }]
+            });
+          }}>
+            批量设置数据
+          </Button>
+        </Space>
       <Space wrap style={{ marginBottom: 20 }}>
         <Button type="primary" onClick={() => {
           formApiRef.current.setField({
@@ -152,10 +200,13 @@ const BaseExample = () => {
         </GroupList>
 
         <div style={{ marginTop: 20 }}>
-          <SubmitButton>提交</SubmitButton>
-          <ResetButton />
+          <Space>
+            <SubmitButton>提交</SubmitButton>
+            <ResetButton />
+          </Space>
         </div>
       </ReactForm>
+      </Card>
     </div>
   );
 };

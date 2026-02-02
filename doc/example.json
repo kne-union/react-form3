@@ -9,6 +9,10 @@
         {
           "name": "_ReactForm",
           "packageName": "@kne/current-lib_react-form"
+        },
+        {
+          "name": "antd",
+          "packageName": "antd"
         }
       ]
     },
