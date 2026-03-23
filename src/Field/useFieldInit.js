@@ -6,6 +6,7 @@ const useFieldInit = ({ name, rule, label, interceptor, associations, noTrim, de
   const fieldRef = useRef(null);
   const { formIsMount, emitter } = useFormContext();
   const associationsRef = useRef(associations);
+  const defaultValueRef = useRef(defaultValue);
   useEffect(() => {
     let isEmit = false;
     if (formIsMount) {
@@ -29,12 +30,12 @@ const useFieldInit = ({ name, rule, label, interceptor, associations, noTrim, de
         id,
         groupName,
         groupIndex,
-        defaultValue,
+        defaultValue: defaultValueRef.current,
         fieldRef,
         errMsg
       });
     }
-  }, [fieldIsMount, emitter, name, rule, label, interceptor, noTrim, id, groupName, groupIndex, defaultValue, fieldRef, errMsg]);
+  }, [fieldIsMount, emitter, name, rule, label, interceptor, noTrim, id, groupName, groupIndex, fieldRef, errMsg]);
 
   return fieldRef;
 };

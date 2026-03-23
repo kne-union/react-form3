@@ -11,6 +11,19 @@ import createSetFieldsEvent from './event/createSetFieldsEvent';
 import createGroupChangeEvent from './event/createGroupChangeEvent';
 import createGroupRemoveEvent from './event/createGroupRemoveEvent';
 
+const eventMap = {
+  'form:field:add': createFieldAddEvent,
+  'form:field:change': createFieldChangeEvent,
+  'form:field:remove': createFieldRemoveEvent,
+  'form:validate': createValidateEvent,
+  'form:reset': createResetEvent,
+  'form:set-data': createSetDataEvent,
+  'form:set-fields': createSetFieldsEvent,
+  'form:submit': createSubmitEvent,
+  'form-group:change': createGroupChangeEvent,
+  'form-group:remove': createGroupRemoveEvent
+};
+
 const FormEvent = ({ children }) => {
   const formContext = useFormContext();
   const formContextRef = useRef(formContext);
@@ -27,18 +40,9 @@ const FormEvent = ({ children }) => {
   }, []);
   useEffect(() => {
     const { emitter } = formContextRef.current;
-    emitter.addListener('form:field:add', createFieldAddEvent(formContextRef));
-    emitter.addListener('form:field:change', createFieldChangeEvent(formContextRef));
-    emitter.addListener('form:field:remove', createFieldRemoveEvent(formContextRef));
-    emitter.addListener('form:validate', createValidateEvent(formContextRef));
-    emitter.addListener('form:reset', createResetEvent(formContextRef));
-    emitter.addListener('form:set-data', createSetDataEvent(formContextRef));
-    emitter.addListener('form:set-fields', createSetFieldsEvent(formContextRef));
-    emitter.addListener('form:submit', createSubmitEvent(formContextRef));
-
-    emitter.addListener('form-group:change', createGroupChangeEvent(formContextRef));
-    emitter.addListener('form-group:remove', createGroupRemoveEvent(formContextRef));
-
+    Object.entries(eventMap).forEach(([eventName, createEvent]) => {
+      emitter.addListener(eventName, createEvent(formContextRef));
+    });
     return () => {
       emitter.removeAllListeners();
     };
