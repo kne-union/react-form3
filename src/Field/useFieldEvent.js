@@ -7,6 +7,68 @@ import getFieldValue from '../core/getFieldValue';
 import getFieldUtils from '../core/getFieldUtils';
 import { useDebouncedCallback } from 'use-debounce';
 
+const createEventHandlers = (id, formContextRef, setValue, setIsValueChanged) => {
+  const { getField, setFieldInfo } = getFieldUtils(formContextRef);
+  const { emitter } = formContextRef.current;
+
+  return {
+    [`form-field:input:${id}`]: ({ value }) => {
+      setValue(value);
+      setIsValueChanged(true);
+      getField(id, async field => {
+        field.setValue(value);
+        setFieldInfo(field);
+        if (field.getFieldValue() !== void 0) {
+          emitter.emit('form:field:set-value', { id, value: field.getFieldValue(), path: field.path });
+          emitter.emit(`form-field:associations:${id}`);
+        }
+      });
+    },
+    [`form-field:format:${id}`]: ({ format }) => {
+      getField(id, field => {
+        const formatValue = format(field.value);
+        if (field.value !== formatValue) {
+          emitter.emit(`form-field:input:${id}`, { value: formatValue });
+        }
+      });
+    },
+    [`form-field:validate:${id}`]: async () => {
+      const { rules, task } = formContextRef.current;
+
+      await task.append(id, async () => {
+        await getField(id, async field => {
+          field.setValidateStatus({ status: FORM_FIELD_VALIDATE_STATE_ENUM.PENDING });
+          setFieldInfo(field);
+        });
+        await getField(id, field => {
+          //处理空格情况
+          if (field.noTrim !== true) {
+            typeof field.value === 'string' && emitter.emit(`form-field:format:${id}`, { format: value => value.trim() });
+          }
+        });
+
+        await getField(id, async field => {
+          //添加到校验任务队列
+          await field.runValidate(rules, () => Field.computedFormDataFormState(formContextRef.current.getFormState()));
+          setFieldInfo(field);
+          emitter.emit(`form-field:validate:complete:${id}`, {
+            validate: field.validate
+          });
+        });
+      });
+    },
+    [`form-field:associations:${id}`]: async () => {
+      const { getFormState, openApi } = formContextRef.current;
+      getField(id, originField => {
+        Field.matchAssociationFields(getFormState(), originField).forEach(field => {
+          emitter.emit('form-field:associations:callback', { target: field, origin: originField });
+          field.associations?.callback({ target: field, origin: originField, openApi });
+        });
+      });
+    }
+  };
+};
+
 const useFieldEvent = ({ id, defaultValue, onChange, time }) => {
   const formContext = useFormContext();
   const { formIsMount } = formContext;
@@ -18,69 +80,10 @@ const useFieldEvent = ({ id, defaultValue, onChange, time }) => {
     if (!formIsMount) {
       return;
     }
-    const { getField, setFieldInfo } = getFieldUtils(formContextRef);
     const { emitter } = formContextRef.current;
-    const listenerTokens = [
-      emitter.addListener(`form-field:input:${id}`, ({ value }) => {
-        setValue(value);
-        setIsValueChanged(true);
-        getField(id, async field => {
-          field.setValue(value);
-          setFieldInfo(field);
-          if (field.getFieldValue() !== void 0) {
-            emitter.emit('form:field:set-value', { id, value: field.getFieldValue(), path: field.path });
-            emitter.emit(`form-field:associations:${id}`);
-          }
-        });
-      }),
-      emitter.addListener(`form-field:format:${id}`, ({ format }) => {
-        getField(id, field => {
-          const formatValue = format(field.value);
-          if (field.value !== formatValue) {
-            emitter.emit(`form-field:input:${id}`, { value: formatValue });
-          }
-        });
-      }),
-      emitter.addListener(`form-field:validate:${id}`, async () => {
-        const { rules, task } = formContextRef.current;
-
-        await task.append(id, async () => {
-          await getField(id, async field => {
-            field.setValidateStatus({ status: FORM_FIELD_VALIDATE_STATE_ENUM.PENDING });
-            setFieldInfo(field);
-          });
-          await getField(id, field => {
-            //处理空格情况
-            if (field.noTrim !== true) {
-              typeof field.value === 'string' && emitter.emit(`form-field:format:${id}`, { format: value => value.trim() });
-            }
-          });
-
-          await getField(id, async field => {
-            //添加到校验任务队列
-            await field.runValidate(rules, () => Field.computedFormDataFormState(formContextRef.current.getFormState()));
-            setFieldInfo(field);
-            emitter.emit(`form-field:validate:complete:${id}`, {
-              validate: field.validate
-            });
-          });
-        });
-      }),
-      emitter.addListener(`form-field:associations:${id}`, async () => {
-        const { getFormState, openApi } = formContextRef.current;
-        getField(id, originField => {
-          Field.matchAssociationFields(getFormState(), originField).forEach(field => {
-            emitter.emit('form-field:associations:callback', { target: field, origin: originField });
-            field.associations?.callback({ target: field, origin: originField, openApi });
-          });
-        });
-      })
-    ];
-    return () => {
-      listenerTokens.forEach(token => {
-        token.remove();
-      });
-    };
+    const handlers = createEventHandlers(id, formContextRef, setValue, setIsValueChanged);
+    const listenerTokens = Object.entries(handlers).map(([eventName, handler]) => emitter.addListener(eventName, handler));
+    return () => listenerTokens.forEach(token => token.remove());
   }, [formIsMount]);
 
   const dataChange = useRefCallback((...args) => {

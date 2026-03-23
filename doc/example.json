@@ -17,6 +17,21 @@
       ]
     },
     {
+      "title": "defaultValue 初值",
+      "description": "通过 defaultValue 为表单字段设置初始值，FormInner 组件内部使用 useFormApi 访问表单 API",
+      "code": "./default-value.js",
+      "scope": [
+        {
+          "name": "_ReactForm",
+          "packageName": "@kne/current-lib_react-form"
+        },
+        {
+          "name": "antd",
+          "packageName": "antd"
+        }
+      ]
+    },
+    {
       "title": "ref 操作 API",
       "description": "通过 ref 访问表单的 openApi，实现数据获取、字段设置、验证控制等操作",
       "code": "./open-api.js",
