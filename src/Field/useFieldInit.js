@@ -7,6 +7,7 @@ const useFieldInit = ({ name, rule, label, interceptor, associations, noTrim, de
   const { formIsMount, emitter } = useFormContext();
   const associationsRef = useRef(associations);
   const defaultValueRef = useRef(defaultValue);
+  defaultValueRef.current = defaultValue;
   useEffect(() => {
     let isEmit = false;
     if (formIsMount) {
