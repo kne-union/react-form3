@@ -12,7 +12,7 @@ const createFieldChangeEvent =
           return;
         }
         const fieldInitData = field.getValueFromFormData(initFormData);
-        if (fieldInitData) {
+        if (fieldInitData !== undefined && fieldInitData !== null) {
           field.setFieldValue(fieldInitData);
           return;
         }
