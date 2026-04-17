@@ -105,6 +105,21 @@
           "packageName": "antd"
         }
       ]
+    },
+    {
+      "title": "falsy 值显示",
+      "description": "展示 Form 的 data 中字段值为 0 或 false 时能正确显示和提交",
+      "code": "./zero-value.js",
+      "scope": [
+        {
+          "name": "_ReactForm",
+          "packageName": "@kne/current-lib_react-form"
+        },
+        {
+          "name": "antd",
+          "packageName": "antd"
+        }
+      ]
     }
   ]
 }

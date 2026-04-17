@@ -24,7 +24,7 @@ const useField = ({ name, rule, label, interceptor, associations, noTrim, deboun
       }
     },
     noTrim,
-    defaultValue: get(defaultGroupValue, name) || defaultValue,
+    defaultValue: get(defaultGroupValue, name) ?? defaultValue,
     id,
     groupName,
     groupIndex,
