@@ -1,5 +1,9 @@
 const createResetEvent = formContextRef => () => {
-  const { getFormState, emitter } = formContextRef.current;
+  const { getFormState, emitter, resetInitFormData } = formContextRef.current;
+
+  if (typeof resetInitFormData === 'function') {
+    resetInitFormData();
+  }
 
   emitter.emit(`form:set-fields`, {
     data: Array.from(getFormState().values()).map(field => {

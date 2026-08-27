@@ -12,45 +12,45 @@ npm i --save @kne/react-form
 
 ### 概述
 
-## 核心特性
+#### 核心特性
 
-### 📦 轻量级状态管理
+##### 📦 轻量级状态管理
 - 基于 React Context + State，零额外依赖
 - 支持嵌套分组和复杂数据结构
 - 实时状态更新，O(1) 高效数据访问
 
-### 🎛️ 灵活字段控制
+##### 🎛️ 灵活字段控制
 - `useField` Hook，字段级精细化控制
 - 支持字段级拦截器与关联联动
 - 内置防抖，智能去空值处理
 
-### 📡 事件驱动架构
+##### 📡 事件驱动架构
 - 基于事件发射器的解耦设计
 - 支持表单/字段/分组三级事件监听
 - 便于扩展和自定义
 
-### ✅ 强大验证系统
+##### ✅ 强大验证系统
 - 内置规则：必填、手机号、邮箱、长度等
 - 支持异步远程验证
 - 可自定义规则与错误提示
 
-### 📁 分组管理
+##### 📁 分组管理
 - 支持无限嵌套分组结构
 - GroupList 动态增删，轻松管理
 - 支持分组级数据批量操作
 
-### 🎮 表单 API
+##### 🎮 表单 API
 - `useFormApi` Hook，完整操作能力
 - 支持获取/设置表单数据
 - 支持字段级验证控制
 
-## 设计理念
+#### 设计理念
 
 Form 组件采用分层架构设计，将表单管理、状态管理、事件处理、验证逻辑等职责分离，通过 Context 进行数据传递，实现了高度解耦和可扩展性。
 
-## 核心架构
+#### 核心架构
 
-### Context 层
+##### Context 层
 
 Form 通过 Provider 将表单的核心能力传递给子组件，包括：
 
@@ -64,7 +64,7 @@ Form 通过 Provider 将表单的核心能力传递给子组件，包括：
 - `interceptor` - 拦截器配置
 - `onSubmit` / `onError` - 提交和错误回调
 
-### Provider 层次结构
+##### Provider 层次结构
 
 ```
 Form (根组件)
@@ -74,9 +74,9 @@ Form (根组件)
   │   │       └─ children (表单字段)
 ```
 
-## 字段系统
+#### 字段系统
 
-### useField Hook
+##### useField Hook
 
 ```javascript
 const fieldProps = useField({
@@ -88,7 +88,7 @@ const fieldProps = useField({
 });
 ```
 
-### 字段状态
+##### 字段状态
 
 每个字段都有独立的状态对象，包含：
 
@@ -102,13 +102,13 @@ const fieldProps = useField({
 - `validate` - 验证状态（INIT/PENDING/PASS/ERROR）
 - `errMsg` - 错误信息
 
-### 表单状态
+##### 表单状态
 
 使用 Map 结构存储所有字段状态，通过 `formStateRef.current` 持有引用，确保状态更新的一致性。
 
-## 验证规则
+#### 验证规则
 
-### 规则格式
+##### 规则格式
 
 验证规则支持三种格式：
 
@@ -116,7 +116,7 @@ const fieldProps = useField({
 2. **函数格式**：自定义验证函数
 3. **正则表达式**：直接使用正则验证
 
-### 规则解析
+##### 规则解析
 
 ```
 规则格式：{RULE_NAME}-{arg1}-{arg2}-{arg3}...
@@ -133,7 +133,7 @@ const fieldProps = useField({
 3. 第一部分为规则名（转为大写匹配） → `LEN`
 4. 后续部分为规则参数 → `[3, 10]`
 
-### 内置规则
+##### 内置规则
 
 | 规则名 | 参数 | 说明 | 验证逻辑 | 错误提示 |
 |--------|------|------|---------|---------|
@@ -142,7 +142,7 @@ const fieldProps = useField({
 | `EMAIL` | 无 | 邮箱验证 | 匹配邮箱正则 | "请输入有效的邮箱" |
 | `LEN` | min, max | 长度验证 | min ≤ 长度 ≤ max | "%s长度必须大于min/小于max/等于min" |
 
-### 自定义规则
+##### 自定义规则
 
 规则函数接收参数：`(value, ...args, { data, field })`
 
@@ -181,7 +181,7 @@ rules: {
 }
 ```
 
-### 验证流程
+##### 验证流程
 
 **单个字段验证流程**：
 
@@ -249,13 +249,13 @@ rules: {
 
 若第 1 步失败，则不会执行后续检查。
 
-## 字段关联
+#### 字段关联
 
-### 设计机制
+##### 设计机制
 
 字段关联是 react-form 实现表单字段联动的核心机制，通过监听关联字段的变化，自动更新目标字段的值。
 
-### 配置结构
+##### 配置结构
 
 ```javascript
 {
@@ -272,7 +272,7 @@ rules: {
 | `fields` | `Array<FieldReference>` | 是 | 关联字段列表，当这些字段变化时触发回调 |
 | `callback` | `Function` | 是 | 关联回调函数，接收变化信息并更新目标字段 |
 
-### FieldReference 引用类型
+##### FieldReference 引用类型
 
 ```javascript
 // 单字段引用
@@ -289,7 +289,7 @@ rules: {
 }
 ```
 
-### Callback 回调参数
+##### Callback 回调参数
 
 ```javascript
 callback: ({ target, origin, openApi, data }) => {
@@ -311,17 +311,17 @@ callback: ({ target, origin, openApi, data }) => {
 }
 ```
 
-### 触发时机
+##### 触发时机
 
 1. **关联字段值变化** - 用户输入或程序修改关联字段的值
 2. **关联字段验证完成** - 字段验证通过后触发
 3. **表单数据批量设置** - 通过 `setFormData()` 或 `setFields()` 批量更新数据
 
-### 执行顺序
+##### 执行顺序
 
 关联更新会递归触发，注意避免循环依赖。
 
-### 避免循环关联
+##### 避免循环关联
 
 ```javascript
 // ❌ 错误：循环依赖
@@ -335,7 +335,7 @@ callback: ({ target, origin, openApi, data }) => {
 }} />
 ```
 
-### 实用场景
+##### 实用场景
 
 详见 `associations.js` 示例文件，包含以下场景：
 
@@ -344,16 +344,16 @@ callback: ({ target, origin, openApi, data }) => {
 3. **数值计算** - 基于多个字段的值进行计算
 4. **分组字段聚合** - 对分组内的多个字段值进行汇总
 
-## 拦截器
+#### 拦截器
 
-### 拦截器类型
+##### 拦截器类型
 
 | 类型 | 执行时机 | 用途 | 方向 |
 |------|---------|------|------|
 | `input` | 值存入表单前 | 数据清理、转换、规范化 | 外部 → 内部 |
 | `output` | 值从表单取出时 | 数据格式化、转换 | 内部 → 外部 |
 
-### 注册机制
+##### 注册机制
 
 ```javascript
 // 全局拦截器（所有表单共享）
@@ -368,7 +368,7 @@ interceptors.output.use('formatDate', value => {
 });
 ```
 
-### 表单级拦截器（优先级高于全局）
+##### 表单级拦截器（优先级高于全局）
 
 ```javascript
 <Form
@@ -389,7 +389,7 @@ interceptors.output.use('formatDate', value => {
 >
 ```
 
-### 字段级拦截器配置
+##### 字段级拦截器配置
 
 ```javascript
 <Input
@@ -399,7 +399,7 @@ interceptors.output.use('formatDate', value => {
 />
 ```
 
-### 优先级
+##### 优先级
 
 ```
 优先级从高到低：
@@ -410,7 +410,7 @@ interceptors.output.use('formatDate', value => {
 同名拦截器：后注册的覆盖先注册的
 ```
 
-### 常用拦截器
+##### 常用拦截器
 
 ```javascript
 import { interceptors } from 'react-form';
@@ -427,9 +427,9 @@ interceptors.output.use('formatCurrency', v => v ? \`¥\${v.toFixed(2)}\` : '¥0
 interceptors.output.use('defaultEmpty', v => v || '');
 ```
 
-## 分组管理
+#### 分组管理
 
-### GroupList 组件
+##### GroupList 组件
 
 用于管理动态增删的分组字段。
 
@@ -441,7 +441,7 @@ interceptors.output.use('defaultEmpty', v => v || '');
 </GroupList>
 ```
 
-### 回调参数
+##### 回调参数
 
 | 参数 | 类型 | 说明 |
 |------|------|------|
@@ -450,9 +450,9 @@ interceptors.output.use('defaultEmpty', v => v || '');
 | `onRemove` | `Function` | 移除当前项的函数 |
 | `length` | `number` | 分组当前项数 |
 
-## 表单 API
+#### 表单 API
 
-### useSubmit Hook
+##### useSubmit Hook
 
 ```javascript
 const { isLoading, isPass, onClick } = useSubmit();
@@ -464,7 +464,7 @@ const { isLoading, isPass, onClick } = useSubmit();
 | `isPass` | `boolean` | 表单是否通过验证 |
 | `onClick` | `Function` | 提交函数 |
 
-### useReset Hook
+##### useReset Hook
 
 ```javascript
 const { onClick } = useReset();
@@ -474,13 +474,13 @@ const { onClick } = useReset();
 |------|------|------|
 | `onClick` | `Function` | 重置函数 |
 
-### useFormApi Hook
+##### useFormApi Hook
 
 ```javascript
 const { openApi } = useFormApi();
 ```
 
-### openApi 方法
+##### openApi 方法
 
 | 类别 | 方法 | 说明 |
 |------|------|------|
@@ -499,9 +499,9 @@ const { openApi } = useFormApi();
 | | `onReady()` | 表单就绪回调 |
 | | `onDestroy()` | 表单销毁回调 |
 
-## 事件系统
+#### 事件系统
 
-### 事件类型
+##### 事件类型
 
 | 事件名称 | 触发时机 | 参数 |
 |---------|---------|------|
@@ -518,7 +518,7 @@ const { openApi } = useFormApi();
 | `form:mount` | 表单挂载完成时 | - |
 | `form:unmount` | 表单卸载时 | - |
 
-### 监听方式
+##### 监听方式
 
 ```javascript
 // 在组件内通过 emitter 监听
@@ -543,7 +543,7 @@ useEffect(() => {
 }, []);
 ```
 
-### 生命周期钩子
+##### 生命周期钩子
 
 ```javascript
 const formApiRef = useRef();
@@ -558,9 +558,9 @@ formApiRef.current.onDestroy(() => {
 });
 ```
 
-## 生命周期
+#### 生命周期
 
-### 表单生命周期
+##### 表单生命周期
 
 | 阶段 | 触发时机 | 执行操作 |
 |------|---------|---------|
@@ -568,14 +568,14 @@ formApiRef.current.onDestroy(() => {
 | 更新 | Form 组件属性变化 | - 更新 rules 配置<br>- 更新 interceptors 配置<br>- 处理 data 变化 |
 | 卸载 | Form 组件销毁 | - 清理所有事件监听器<br>- 清理异步任务<br>- 释放内存资源 |
 
-### 字段生命周期
+##### 字段生命周期
 
 | 阶段 | 状态 | 说明 | 可执行操作 |
 |------|------|------|-----------|
 | PRE_INIT | 预初始化 | 字段刚创建，尚未绑定到表单状态 | - |
 | INIT | 已初始化 | 字段已注册到表单，可以交互 | 获取/设置值、验证、触发事件 |
 
-### 字段状态转换流程
+##### 字段状态转换流程
 
 ```
 字段创建
@@ -595,7 +595,7 @@ PASS 或 ERROR (验证结果)
 INIT (回到初始状态)
 ```
 
-### 验证状态枚举
+##### 验证状态枚举
 
 | 状态值 | 枚举名 | 说明 | UI 展示建议 |
 |--------|--------|------|------------|
@@ -1550,6 +1550,238 @@ render(<BaseExample />);
 
 ```
 
+- 嵌套 GroupList setFormData
+- 验收外层+内层 GroupList 一次 setFormData 后内层数据完整（setFormData 同步更新 initFormData）
+- _ReactForm(@kne/current-lib_react-form),antd(antd)
+
+```jsx
+/**
+ * 验证：外层 GroupList + 内层 GroupList，一次 setFormData 后
+ * 每条外层项的内层列表都应有数据（修复：setFormData 同步更新 initFormData）。
+ *
+ * 操作：点「一次 setFormData」→ 三条技能下依据均应有内容；再「读取 getFormData」对照。
+ */
+const { default: ReactForm, useField, useSubmit, useReset, useFormApi, GroupList } = _ReactForm;
+const { useRef, useState } = React;
+const { Button, Space, Card, Input: AntInput, Typography, message, Alert, Divider } = antd;
+const { Text, Paragraph } = Typography;
+
+const SAMPLE_DATA = {
+  skill: [
+    {
+      name: '技能 A',
+      contentItems: [
+        { title: '依据 A1', description: '描述 A1', source: 'JD' },
+        { title: '依据 A2', description: '描述 A2', source: '报告' }
+      ]
+    },
+    {
+      name: '技能 B',
+      contentItems: [
+        { title: '依据 B1', description: '描述 B1', source: 'JD' },
+        { title: '依据 B2', description: '描述 B2', source: '报告' }
+      ]
+    },
+    {
+      name: '技能 C',
+      contentItems: [
+        { title: '依据 C1', description: '描述 C1', source: 'JD' },
+        { title: '依据 C2', description: '描述 C2', source: '报告' }
+      ]
+    }
+  ]
+};
+
+const Input = props => {
+  const fieldProps = useField(props);
+  const isError = fieldProps.errState === 2;
+  return (
+    <div style={{ marginBottom: 8, minWidth: 140 }}>
+      <div style={{ marginBottom: 4 }}>
+        <Text type={isError ? 'danger' : undefined} style={{ fontSize: 12 }}>
+          {fieldProps.label}
+        </Text>
+      </div>
+      <AntInput
+        ref={fieldProps.fieldRef}
+        value={fieldProps.value ?? ''}
+        onChange={e => fieldProps.onChange(e.target.value)}
+        onBlur={fieldProps.triggerValidate}
+        status={isError ? 'error' : undefined}
+        size="small"
+      />
+    </div>
+  );
+};
+
+const ContentItems = () => {
+  const ref = useRef(null);
+  return (
+    <div style={{ marginTop: 8, padding: 8, background: '#f0f5ff', borderRadius: 4 }}>
+      <Text strong style={{ fontSize: 12 }}>
+        依据（内层 GroupList / contentItems）
+      </Text>
+      <GroupList ref={ref} name="contentItems" defaultLength={0} reverseOrder={false}>
+        {({ index, onRemove }) => (
+          <div
+            style={{
+              display: 'flex',
+              flexWrap: 'wrap',
+              gap: 8,
+              alignItems: 'flex-end',
+              marginTop: 8,
+              padding: 8,
+              background: '#fff',
+              borderRadius: 4,
+              border: '1px dashed #91caff'
+            }}>
+            <Text style={{ fontSize: 12 }}>依据 {index + 1}</Text>
+            <Input name="title" label="标题" />
+            <Input name="description" label="描述" />
+            <Input name="source" label="来源" />
+            <Button size="small" danger onClick={onRemove}>
+              删
+            </Button>
+          </div>
+        )}
+      </GroupList>
+      <Button size="small" style={{ marginTop: 8 }} onClick={() => ref.current?.onAdd()}>
+        添加依据
+      </Button>
+    </div>
+  );
+};
+
+const SnapshotPanel = () => {
+  const { openApi } = useFormApi();
+  const [snap, setSnap] = useState(null);
+  return (
+    <div style={{ marginTop: 12 }}>
+      <Button
+        onClick={() => {
+          const data = openApi.getFormData();
+          setSnap(data);
+          console.log('[nested-set-form-data] getFormData', data);
+          const summary = (data.skill || []).map((s, i) => ({
+            index: i,
+            name: s?.name,
+            contentItemsLen: Array.isArray(s?.contentItems) ? s.contentItems.length : 0,
+            contentItems: s?.contentItems
+          }));
+          console.log('[nested-set-form-data] contentItems summary', summary);
+          message.info('已打印 getFormData，见控制台');
+        }}>
+        读取 getFormData
+      </Button>
+      {snap ? (
+        <pre style={{ marginTop: 8, fontSize: 11, maxHeight: 240, overflow: 'auto', background: '#fafafa', padding: 8 }}>
+          {JSON.stringify(snap, null, 2)}
+        </pre>
+      ) : null}
+    </div>
+  );
+};
+
+const Toolbar = () => {
+  const { openApi } = useFormApi();
+  return (
+    <Space wrap style={{ marginBottom: 16 }}>
+      <Button
+        type="primary"
+        onClick={() => {
+          console.log('[nested-set-form-data] setFormData once', SAMPLE_DATA);
+          openApi.setFormData(SAMPLE_DATA, false);
+        }}>
+        一次 setFormData（模拟 AI 填充）
+      </Button>
+      <Button
+        onClick={() => {
+          openApi.setFormData({ skill: [{ name: '', contentItems: [] }] }, false);
+        }}>
+        重置为 1 条空技能
+      </Button>
+    </Space>
+  );
+};
+
+const SubmitButton = ({ children }) => {
+  const { isLoading, onClick } = useSubmit();
+  return (
+    <Button type="primary" onClick={onClick} loading={isLoading}>
+      {children}
+    </Button>
+  );
+};
+
+const ResetButton = () => {
+  const { onClick } = useReset();
+  return <Button onClick={onClick}>重置</Button>;
+};
+
+const BaseExample = () => {
+  const skillRef = useRef();
+  return (
+    <div style={{ padding: 24, background: '#f5f5f5', minHeight: '100vh' }}>
+      <Card title="嵌套 GroupList + setFormData 复现" bordered={false}>
+        <Alert
+          type="info"
+          showIcon
+          style={{ marginBottom: 16 }}
+          message="验收点"
+          description={
+            <Paragraph style={{ marginBottom: 0 }}>
+              初始 1 条外层技能（defaultLength=1），内层依据 defaultLength=0。一次 setFormData 写入 3 条技能、每条 2 条依据后，<strong>三条技能的依据都应有内容</strong>（依赖 setFormData 同步更新 initFormData）。
+            </Paragraph>
+          }
+        />
+        <ReactForm
+          onSubmit={data => {
+            console.log('submit', data);
+            message.success('已提交，见控制台');
+          }}>
+          <Toolbar />
+          <div style={{ marginBottom: 12 }}>
+            <Button type="dashed" onClick={() => skillRef.current?.onAdd()}>
+              手动添加技能
+            </Button>
+          </div>
+          <GroupList ref={skillRef} name="skill" defaultLength={1} reverseOrder={false}>
+            {({ index, onRemove, length }) => (
+              <div
+                style={{
+                  padding: 16,
+                  marginBottom: 12,
+                  border: '1px solid #d9d9d9',
+                  borderRadius: 8,
+                  background: '#fff'
+                }}>
+                <div style={{ fontWeight: 600, marginBottom: 8 }}>
+                  技能 {index + 1} / 共 {length}
+                </div>
+                <Input name="name" label="技能名称" rule="REQ" />
+                <ContentItems />
+                <Button danger size="small" style={{ marginTop: 8 }} onClick={onRemove}>
+                  删除技能
+                </Button>
+              </div>
+            )}
+          </GroupList>
+          <Divider />
+          <SnapshotPanel />
+          <Space style={{ marginTop: 16 }}>
+            <SubmitButton>提交</SubmitButton>
+            <ResetButton />
+          </Space>
+        </ReactForm>
+      </Card>
+    </div>
+  );
+};
+
+render(<BaseExample />);
+
+```
+
 - 字段关联
 - 通过 associations 实现字段间的联动关系，支持单字段联动、多字段联动、分组联动和计算联动
 - _ReactForm(@kne/current-lib_react-form),antd(antd)
@@ -2243,9 +2475,9 @@ render(<ZeroValueExample />);
 
 ### API
 
-### Form 组件 API
+#### Form 组件 API
 
-#### 属性
+##### 属性
 
 | 属性名 | 说明 | 类型 | 默认值 |
 |-----|----|----|-----|
@@ -2260,7 +2492,7 @@ render(<ZeroValueExample />);
 | onFormDataChange | 表单数据变化回调 | function(formData) | - |
 | children | 表单内容 | React.ReactNode | - |
 
-#### Ref 暴露的方法
+##### Ref 暴露的方法
 
 | 方法名 | 说明 | 参数 | 返回值 |
 |-----|----|----|-----|
@@ -2283,9 +2515,9 @@ render(<ZeroValueExample />);
 | onReady | 表单就绪回调 | callback | - |
 | onDestroy | 表单销毁回调 | callback | - |
 
-### useField Hook API
+#### useField Hook API
 
-#### 参数
+##### 参数
 
 | 参数名 | 说明 | 类型 | 默认值 |
 |-----|----|----|-----|
@@ -2300,7 +2532,7 @@ render(<ZeroValueExample />);
 | errMsg | 自定义错误信息 | string | - |
 | onChange | 值变化回调 | function(value) | - |
 
-#### 返回值
+##### 返回值
 
 | 属性名 | 说明 | 类型 |
 |-----|----|----|
@@ -2321,9 +2553,9 @@ render(<ZeroValueExample />);
 | errState | 错误状态 (0未验证, 1通过, 2错误, 3验证中) | number |
 | errMsg | 错误信息 | string |
 
-### useSubmit Hook API
+#### useSubmit Hook API
 
-#### 返回值
+##### 返回值
 
 | 属性名 | 说明 | 类型 |
 |-----|----|----|
@@ -2331,23 +2563,23 @@ render(<ZeroValueExample />);
 | isPass | 表单是否通过验证 | boolean |
 | onClick | 提交点击处理函数 | function |
 
-### useReset Hook API
+#### useReset Hook API
 
-#### 返回值
+##### 返回值
 
 | 属性名 | 说明 | 类型 |
 |-----|----|----|
 | onClick | 重置点击处理函数 | function |
 
-### useFormApi Hook API
+#### useFormApi Hook API
 
-#### 返回值
+##### 返回值
 
 与 Form 组件 ref 暴露的方法相同，返回 openApi 对象。
 
-### Group 组件 API
+#### Group 组件 API
 
-#### 属性
+##### 属性
 
 | 属性名 | 说明 | 类型 |
 |-----|----|----|
@@ -2356,7 +2588,7 @@ render(<ZeroValueExample />);
 | defaultValue | 分组默认值 | object |
 | children | 渲染函数 | function({ id, name, group, index }) |
 
-#### children 参数
+##### children 参数
 
 | 参数名 | 说明 | 类型 |
 |-----|----|----|
@@ -2365,9 +2597,9 @@ render(<ZeroValueExample />);
 | group | 分组数据 | object |
 | index | 分组索引 | number |
 
-### GroupList 组件 API
+#### GroupList 组件 API
 
-#### 属性
+##### 属性
 
 | 属性名 | 说明 | 类型 | 默认值 |
 |-----|----|----|-----|
@@ -2378,7 +2610,7 @@ render(<ZeroValueExample />);
 | children | 渲染函数 | function | - |
 | ref | ref 对象 | RefObject | - |
 
-#### children 参数
+##### children 参数
 
 | 参数名 | 说明 | 类型 |
 |-----|----|----|
@@ -2388,14 +2620,14 @@ render(<ZeroValueExample />);
 | onAdd | 添加分组项 | function(options) |
 | onRemove | 删除当前分组项 | function |
 
-#### ref 暴露的方法
+##### ref 暴露的方法
 
 | 方法名 | 说明 | 参数 |
 |-----|----|----|
 | onAdd | 添加分组项 | function({ isUnshift?, defaultValue? }) |
 | onRemove | 删除分组项 | function(id) |
 
-### 内置验证规则
+#### 内置验证规则
 
 | 规则名 | 说明 | 格式 | 示例 |
 |-----|----|----|-----|
@@ -2404,21 +2636,21 @@ render(<ZeroValueExample />);
 | EMAIL | 邮箱验证 | EMAIL | rule="EMAIL" |
 | LEN | 长度验证 | LEN-{min}-{max} | rule="LEN-3-10" |
 
-#### 验证规则格式说明
+##### 验证规则格式说明
 
 - 验证规则通过空格分隔，可组合多个规则
 - LEN 规则格式：LEN-{最小长度}-{最大长度}，若最小等于最大则表示精确长度
 
-### 全局拦截器 API
+#### 全局拦截器 API
 
-#### 注册拦截器
+##### 注册拦截器
 
 | 方法名 | 说明 | 参数 | 返回值 |
 |-----|----|----|-----|
 | interceptors.input.use | 注册输入拦截器 | (name, function) | number |
 | interceptors.output.use | 注册输出拦截器 | (name, function) | number |
 
-#### 使用示例
+##### 使用示例
 
 ```javascript
 import { interceptors } from '@kne/react-form';
