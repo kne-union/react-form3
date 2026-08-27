@@ -1,4 +1,5 @@
 import React, { useState, useRef, forwardRef, useImperativeHandle } from 'react';
+import cloneDeep from 'lodash/cloneDeep';
 import { Provider } from '../formContext';
 import FormEvent from './FormEvent';
 import FormApiProvider from './FormApiProvider';
@@ -20,6 +21,14 @@ const Form = forwardRef(({ data, rules, interceptors, debug, noFilter, onPrevSub
   const interceptor = useInterceptors({ interceptors });
   useImperativeHandle(ref, () => openApi, [openApi]);
 
+  // setFormData 会同步写入；props.data 变化时与之对齐。供后挂载的 GroupList/字段读取。
+  const propsDataRef = useRef(data);
+  const initFormDataRef = useRef(cloneDeep(data || {}));
+  if (data !== propsDataRef.current) {
+    propsDataRef.current = data;
+    initFormDataRef.current = cloneDeep(data || {});
+  }
+
   return (
     <Provider
       value={{
@@ -40,7 +49,14 @@ const Form = forwardRef(({ data, rules, interceptors, debug, noFilter, onPrevSub
         setFormIsMount,
         group,
         setGroup,
-        initFormData: Object.assign({}, data),
+        initFormData: initFormDataRef.current,
+        getInitFormData: () => initFormDataRef.current,
+        setInitFormData: next => {
+          initFormDataRef.current = next && typeof next === 'object' ? next : {};
+        },
+        resetInitFormData: () => {
+          initFormDataRef.current = cloneDeep(propsDataRef.current || {});
+        },
         rules: Object.assign({}, RULES, rules),
         interceptor,
         debug,

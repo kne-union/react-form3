@@ -1,9 +1,14 @@
+import cloneDeep from 'lodash/cloneDeep';
 import getIdlePromise from '../../core/getIdlePromise';
 
 const createSetDataEvent =
   formContextRef =>
   async ({ data, runValidate = true }) => {
-    const { setFormState, emitter } = formContextRef.current;
+    const { setFormState, emitter, setInitFormData } = formContextRef.current;
+    // 先更新 initFormData，后挂载的嵌套 GroupList/字段才能读到本次写入（而非陈旧 Form data 初值）
+    if (typeof setInitFormData === 'function') {
+      setInitFormData(cloneDeep(data || {}));
+    }
     setFormState(formState => {
       const newState = new Map();
       Array.from(formState.values()).forEach(field => {

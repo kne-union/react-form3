@@ -11,8 +11,10 @@ const GroupList = forwardRef(({ name, defaultLength = 1, empty, reverseOrder = t
   const [list, setList] = useState([]);
   const listRef = useRef(list);
   listRef.current = list;
-  const { initFormData: initData, emitter } = useFormContext();
+  const { initFormData: initData, getInitFormData, emitter } = useFormContext();
   const { id: parentId, name: parentName, index: parentIndex } = useGroupContext();
+
+  const resolveInitData = () => (typeof getInitFormData === 'function' ? getInitFormData() : initData);
 
   const groupName = useMemo(() => {
     if (parentIndex > -1 && parentName) {
@@ -43,7 +45,7 @@ const GroupList = forwardRef(({ name, defaultLength = 1, empty, reverseOrder = t
       setList(targetList);
     };
 
-    setListFromFormData(get(initData, groupName ? `${groupName}.${name}` : name));
+    setListFromFormData(get(resolveInitData(), groupName ? `${groupName}.${name}` : name));
     const sub = emitter.addListener('form:set-data', ({ data }) => {
       setListFromFormData(get(data, groupName ? `${groupName}.${name}` : name));
     });
@@ -81,7 +83,7 @@ const GroupList = forwardRef(({ name, defaultLength = 1, empty, reverseOrder = t
   const removeHandler = useRefCallback(id => {
     setList(list => {
       const index = list.findIndex(item => item.id === id);
-      const target = get(initData, targetPath);
+      const target = get(resolveInitData(), targetPath);
       if (Array.isArray(target)) {
         target.splice(index, 1);
       }

@@ -3,7 +3,7 @@ import getFieldUtils from '../../core/getFieldUtils';
 const createFieldChangeEvent =
   formContextRef =>
   async ({ id, defaultValue, ...fieldProps }) => {
-    const { setFormState, initFormData, emitter } = formContextRef.current;
+    const { setFormState, initFormData, getInitFormData, emitter } = formContextRef.current;
     const { getField } = getFieldUtils(formContextRef);
     getField(id, async field => {
       field.setInfo(fieldProps);
@@ -11,7 +11,8 @@ const createFieldChangeEvent =
         if (field.value !== void 0) {
           return;
         }
-        const fieldInitData = field.getValueFromFormData(initFormData);
+        const source = typeof getInitFormData === 'function' ? getInitFormData() : initFormData;
+        const fieldInitData = field.getValueFromFormData(source);
         if (fieldInitData !== undefined && fieldInitData !== null) {
           field.setFieldValue(fieldInitData);
           return;

@@ -77,6 +77,21 @@
       ]
     },
     {
+      "title": "嵌套 GroupList setFormData",
+      "description": "验收外层+内层 GroupList 一次 setFormData 后内层数据完整（setFormData 同步更新 initFormData）",
+      "code": "./nested-set-form-data.js",
+      "scope": [
+        {
+          "name": "_ReactForm",
+          "packageName": "@kne/current-lib_react-form"
+        },
+        {
+          "name": "antd",
+          "packageName": "antd"
+        }
+      ]
+    },
+    {
       "title": "字段关联",
       "description": "通过 associations 实现字段间的联动关系，支持单字段联动、多字段联动、分组联动和计算联动",
       "code": "./associations.js",
