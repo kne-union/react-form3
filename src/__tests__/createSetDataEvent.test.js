@@ -1,5 +1,6 @@
 import createSetDataEvent from '../Form/event/createSetDataEvent';
 import Field, { FORM_FIELD_STATE_ENUM } from '../core/Field';
+import { createField, createMockFormContext } from '../test-utils/formTestUtils';
 
 const defaultInterceptor = {
   input: ({ value }) => value,
@@ -70,5 +71,28 @@ describe('createSetDataEvent initFormData', () => {
     expect(formContextRef.current.getInitFormData()).not.toBe(next);
     expect(formContextRef.current.getInitFormData().skill[1].contentItems).toHaveLength(2);
     expect(formState.get('f1').value).toBe('技能 A');
+  });
+
+  test('PRE_INIT 字段保留在 Map，并从合并后的 pending 回填', async () => {
+    const { formContextRef, formState, pendingStore } = createMockFormContext();
+    pendingStore.setPath('title', 'from-pending');
+    const field = createField({ id: 'f1', name: 'title', ready: false });
+    formState.set('f1', field);
+
+    await createSetDataEvent(formContextRef)({ data: { title: 'from-data' }, runValidate: false });
+
+    expect(formState.has('f1')).toBe(true);
+    expect(formState.get('f1').value).toBe('from-data');
+    expect(formContextRef.current.emitter.emit).toHaveBeenCalledWith('form-field:input:f1', { value: 'from-data' });
+  });
+
+  test('ready 字段按 data 覆盖并发 input', async () => {
+    const { formContextRef, formState } = createMockFormContext();
+    formState.set('f1', createField({ id: 'f1', name: 'title', value: 'old' }));
+
+    await createSetDataEvent(formContextRef)({ data: { title: 'next' }, runValidate: false });
+
+    expect(formState.get('f1').value).toBe('next');
+    expect(formContextRef.current.emitter.emit).toHaveBeenCalledWith('form-field:input:f1', { value: 'next' });
   });
 });

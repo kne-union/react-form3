@@ -62,7 +62,7 @@ Form 通过 Provider 将表单的核心能力传递给子组件，包括：
 - `formIsMount` - 表单挂载状态
 - `rules` - 验证规则集合，包含内置规则和自定义规则
 - `interceptor` - 拦截器配置
-- `onSubmit` / `onError` - 提交和错误回调
+- `onSubmit` / `onError` / `onFormDataChange` - 提交、错误与数据变化回调
 
 ##### Provider 层次结构
 
@@ -344,6 +344,8 @@ callback: ({ target, origin, openApi, data }) => {
 3. **数值计算** - 基于多个字段的值进行计算
 4. **分组字段聚合** - 对分组内的多个字段值进行汇总
 
+条件显示与赋值见 `linkage.js`：用 `useWatch` 订阅 `form:field:set-value` 后条件渲染字段；显示时用 `setField` 赋值（未挂载会写入 pending），显示后继续用 `associations` 跟随源字段。
+
 #### 拦截器
 
 ##### 拦截器类型
@@ -496,7 +498,7 @@ const { openApi } = useFormApi();
 | **错误处理** | `errors` | 获取所有错误信息 |
 | **表单控制** | `submit()` | 提交表单 |
 | | `reset()` | 重置表单 |
-| | `onReady()` | 表单就绪回调 |
+| | `onReady()` | 表单就绪回调（已 mount 则立即执行） |
 | | `onDestroy()` | 表单销毁回调 |
 
 #### 事件系统
@@ -565,7 +567,7 @@ formApiRef.current.onDestroy(() => {
 | 阶段 | 触发时机 | 执行操作 |
 |------|---------|---------|
 | 挂载 | Form 组件首次渲染 | - 初始化 formState (Map 结构)<br>- 创建事件发射器<br>- 初始化 openApi<br>- 设置初始数据<br>- 绑定事件监听器 |
-| 更新 | Form 组件属性变化 | - 更新 rules 配置<br>- 更新 interceptors 配置<br>- 处理 data 变化 |
+| 更新 | Form 组件属性变化 | - 更新 rules 配置<br>- 更新 interceptors 配置<br>- data 只更新后挂载字段的初始值，不重放已挂载字段 |
 | 卸载 | Form 组件销毁 | - 清理所有事件监听器<br>- 清理异步任务<br>- 释放内存资源 |
 
 ##### 字段生命周期
@@ -1982,6 +1984,749 @@ render(<BaseExample />);
 
 ```
 
+- 联动显示与赋值
+- 根据表单数据条件显示字段；用按钮一次 setFields 给不同条件的字段整体赋值
+- _ReactForm(@kne/current-lib_react-form),antd(antd)
+
+```jsx
+const { default: ReactForm, useField, useSubmit, useReset, useFormApi } = _ReactForm;
+const { useEffect, useState } = React;
+const { Button, Space, Card, Input: AntInput, Select: AntSelect, Radio, Switch, Tag, Typography, message } = antd;
+const { Text } = Typography;
+
+const Input = props => {
+  const fieldProps = useField(props);
+  const isError = fieldProps.errState === 2;
+  const isValidating = fieldProps.errState === 3;
+
+  return (
+    <div style={{ marginBottom: 16 }}>
+      <div style={{ marginBottom: 4 }}>
+        <Text type={isError ? 'danger' : undefined}>{fieldProps.label}</Text>
+      </div>
+      <div>
+        <AntInput
+          {...fieldProps.associationOptions}
+          ref={fieldProps.fieldRef}
+          type="text"
+          value={fieldProps.value || ''}
+          onChange={e => fieldProps.onChange(e.target.value)}
+          onBlur={fieldProps.triggerValidate}
+          status={isError ? 'error' : undefined}
+          style={{ width: 200 }}
+        />
+        {fieldProps.errMsg && (
+          <Text type="danger" style={{ marginLeft: 8, fontSize: 12 }}>
+            {fieldProps.errMsg}
+          </Text>
+        )}
+        {isValidating && (
+          <Text type="secondary" style={{ marginLeft: 8, fontSize: 12 }}>
+            验证中...
+          </Text>
+        )}
+      </div>
+    </div>
+  );
+};
+
+const SelectField = props => {
+  const { options, ...rest } = props;
+  const fieldProps = useField(rest);
+  const isError = fieldProps.errState === 2;
+
+  return (
+    <div style={{ marginBottom: 16 }}>
+      <div style={{ marginBottom: 4 }}>
+        <Text type={isError ? 'danger' : undefined}>{fieldProps.label}</Text>
+      </div>
+      <AntSelect
+        {...fieldProps.associationOptions}
+        value={fieldProps.value}
+        onChange={value => {
+          fieldProps.onChange(value);
+          fieldProps.triggerValidate();
+        }}
+        options={options}
+        status={isError ? 'error' : undefined}
+        style={{ width: 200 }}
+      />
+      {fieldProps.errMsg && (
+        <Text type="danger" style={{ marginLeft: 8, fontSize: 12 }}>
+          {fieldProps.errMsg}
+        </Text>
+      )}
+    </div>
+  );
+};
+
+const RadioField = props => {
+  const { options, ...rest } = props;
+  const fieldProps = useField(rest);
+
+  return (
+    <div style={{ marginBottom: 16 }}>
+      <div style={{ marginBottom: 4 }}>
+        <Text>{fieldProps.label}</Text>
+      </div>
+      <Radio.Group
+        value={fieldProps.value}
+        onChange={e => {
+          fieldProps.onChange(e.target.value);
+          fieldProps.triggerValidate();
+        }}>
+        {options.map(item => (
+          <Radio key={item.value} value={item.value}>
+            {item.label}
+          </Radio>
+        ))}
+      </Radio.Group>
+    </div>
+  );
+};
+
+const SwitchField = props => {
+  const fieldProps = useField(props);
+
+  return (
+    <div style={{ marginBottom: 16 }}>
+      <Space>
+        <Switch
+          checked={!!fieldProps.value}
+          onChange={checked => {
+            fieldProps.onChange(checked);
+            fieldProps.triggerValidate();
+          }}
+        />
+        <Text>{fieldProps.label}</Text>
+      </Space>
+    </div>
+  );
+};
+
+const SubmitButton = ({ children }) => {
+  const { isLoading, onClick } = useSubmit();
+  return (
+    <Button type="primary" onClick={onClick} loading={isLoading} style={{ marginRight: 8 }}>
+      {children}
+    </Button>
+  );
+};
+
+const ResetButton = () => {
+  const { onClick } = useReset();
+  return <Button onClick={onClick}>重置</Button>;
+};
+
+const useWatch = name => {
+  const { openApi, emitter } = useFormApi();
+  const [value, setValue] = useState(() => (openApi.getFormData() || {})[name]);
+
+  useEffect(() => {
+    const syncFromForm = () => {
+      setValue((openApi.getFormData() || {})[name]);
+    };
+    const onSetValue = payload => {
+      if (payload.path === name) {
+        setValue(payload.value);
+      }
+    };
+    const setToken = emitter.addListener('form:field:set-value', onSetValue);
+    const resetToken = emitter.addListener('form:reset', syncFromForm);
+    return () => {
+      setToken.remove();
+      resetToken.remove();
+    };
+  }, [emitter, name, openApi]);
+
+  return value;
+};
+
+const Watch = ({ name, children }) => children(useWatch(name));
+
+const toCompanyEmail = name => {
+  const local = String(name || '').replace(/[^a-zA-Z0-9_.-]/g, '');
+  return &#96;${local || 'contact'}@example.com&#96;;
+};
+
+const FillOnShow = ({ name, from, map }) => {
+  const { openApi } = useFormApi();
+
+  useEffect(() => {
+    const data = openApi.getFormData() || {};
+    if (data[name] !== undefined && data[name] !== '') {
+      return;
+    }
+    const source = data[from];
+    const next = map ? map(source, data) : source;
+    if (next === undefined || next === '') {
+      return;
+    }
+    openApi.setField({ name, value: next });
+  }, []);
+
+  return null;
+};
+
+const AssignButtons = ({ items }) => {
+  const { openApi } = useFormApi();
+
+  return (
+    <Space wrap style={{ marginBottom: 12 }}>
+      {items.map(item => (
+        <Button
+          key={item.label}
+          onClick={() => {
+            const data = openApi.getFormData() || {};
+            const fields = item.getFields ? item.getFields(data) : item.fields;
+            openApi.setFields(fields);
+            message.success(&#96;已赋值：${item.label}&#96;);
+          }}>
+          {item.label}
+        </Button>
+      ))}
+    </Space>
+  );
+};
+
+const BaseExample = () => {
+  return (
+    <div style={{ padding: 24, background: '#f5f5f5', minHeight: '100vh' }}>
+      <Card title="表单数据联动显示与赋值" bordered={false}>
+        <ReactForm
+          debug
+          onSubmit={data => {
+            console.log('submit:', data);
+            message.success('提交成功: ' + JSON.stringify(data, null, 2));
+          }}>
+          <Card
+            type="inner"
+            title={
+              <Space>
+                1. 按表单数据条件显示字段<Tag color="blue">隐藏字段卸载</Tag>
+              </Space>
+            }
+            style={{ marginBottom: 16 }}>
+            <Text type="secondary" style={{ display: 'block', marginBottom: 12 }}>
+              用 useWatch 读当前表单值，再条件渲染字段。隐藏时卸载，提交不含该字段；再次显示会从 pending 恢复刚才填过的值。
+              下方按钮一次 setFields 条件字段和对应输入：当前未挂载的字段会进 pending，切过去就能带出。
+            </Text>
+            <AssignButtons
+              items={[
+                {
+                  label: '填入邮箱方案',
+                  fields: [
+                    { name: 'contactType', value: 'email' },
+                    { name: 'email', value: 'alice@example.com' }
+                  ]
+                },
+                {
+                  label: '填入手机方案',
+                  fields: [
+                    { name: 'contactType', value: 'phone' },
+                    { name: 'phone', value: '13800138000' }
+                  ]
+                }
+              ]}
+            />
+            <RadioField
+              name="contactType"
+              label="联系方式"
+              defaultValue="email"
+              options={[
+                { label: '邮箱', value: 'email' },
+                { label: '手机', value: 'phone' }
+              ]}
+            />
+            <Watch name="contactType">
+              {contactType =>
+                contactType === 'email' ? (
+                  <Input name="email" label="邮箱" rule="REQ EMAIL" />
+                ) : contactType === 'phone' ? (
+                  <Input name="phone" label="手机" rule="REQ TEL" />
+                ) : null
+              }
+            </Watch>
+          </Card>
+
+          <Card
+            type="inner"
+            title={
+              <Space>
+                2. 显示时赋值，并继续跟随<Tag color="green">setField + associations</Tag>
+              </Space>
+            }
+            style={{ marginBottom: 16 }}>
+            <Text type="secondary" style={{ display: 'block', marginBottom: 12 }}>
+              打开开关后挂载昵称：FillOnShow 用 setField 把名称抄过去（字段尚未挂载时会写入 pending）；之后名称变化由 associations 同步。
+            </Text>
+            <AssignButtons
+              items={[
+                {
+                  label: '打开昵称并抄名称',
+                  getFields: data => [
+                    { name: 'sameAsName', value: true },
+                    { name: 'nickname', value: data.name || '示例昵称' }
+                  ]
+                },
+                {
+                  label: '关掉昵称只改名称',
+                  fields: [
+                    { name: 'sameAsName', value: false },
+                    { name: 'name', value: '王五' }
+                  ]
+                }
+              ]}
+            />
+            <Input name="name" label="名称" rule="REQ LEN-0-10" />
+            <SwitchField name="sameAsName" label="使用名称作为昵称" />
+            <Watch name="sameAsName">
+              {sameAsName =>
+                sameAsName ? (
+                  <>
+                    <FillOnShow name="nickname" from="name" />
+                    <Input
+                      name="nickname"
+                      label="昵称"
+                      rule="REQ LEN-0-10"
+                      associations={{
+                        fields: [{ name: 'name' }],
+                        callback: ({ target, origin, openApi }) => {
+                          openApi.setFieldValue(target, origin.value);
+                        }
+                      }}
+                    />
+                  </>
+                ) : null
+              }
+            </Watch>
+          </Card>
+
+          <Card
+            type="inner"
+            title={
+              <Space>
+                3. 类型切换后显示并计算赋值<Tag color="orange">setField 计算值</Tag>
+              </Space>
+            }
+            style={{ marginBottom: 16 }}>
+            <Text type="secondary" style={{ display: 'block', marginBottom: 12 }}>
+              选「企业」后显示公司名和联系邮箱：公司名默认用名称，邮箱按名称拼出示例地址。提交时仅包含当前显示的字段。
+            </Text>
+            <AssignButtons
+              items={[
+                {
+                  label: '切到企业并填公司信息',
+                  getFields: data => [
+                    { name: 'userType', value: 'company' },
+                    { name: 'companyName', value: data.name ? &#96;${data.name}科技&#96; : '示例科技' },
+                    { name: 'companyEmail', value: toCompanyEmail(data.name) }
+                  ]
+                },
+                {
+                  label: '切回个人',
+                  fields: [{ name: 'userType', value: 'person' }]
+                }
+              ]}
+            />
+            <SelectField
+              name="userType"
+              label="用户类型"
+              defaultValue="person"
+              options={[
+                { label: '个人', value: 'person' },
+                { label: '企业', value: 'company' }
+              ]}
+            />
+            <Watch name="userType">
+              {userType =>
+                userType === 'company' ? (
+                  <>
+                    <FillOnShow name="companyName" from="name" />
+                    <FillOnShow
+                      name="companyEmail"
+                      from="name"
+                      map={name => toCompanyEmail(name)}
+                    />
+                    <Input
+                      name="companyName"
+                      label="公司名称"
+                      rule="REQ"
+                      associations={{
+                        fields: [{ name: 'name' }],
+                        callback: ({ target, origin, openApi }) => {
+                          openApi.setFieldValue(target, origin.value);
+                        }
+                      }}
+                    />
+                    <Input
+                      name="companyEmail"
+                      label="企业邮箱"
+                      rule="REQ EMAIL"
+                      associations={{
+                        fields: [{ name: 'name' }],
+                        callback: ({ target, origin, openApi }) => {
+                          openApi.setFieldValue(target, toCompanyEmail(origin.value));
+                        }
+                      }}
+                    />
+                  </>
+                ) : null
+              }
+            </Watch>
+          </Card>
+
+          <Card
+            type="inner"
+            title={
+              <Space>
+                4. 按条件整套赋值<Tag color="purple">一次 setFields</Tag>
+              </Space>
+            }
+            style={{ marginBottom: 16 }}>
+            <Text type="secondary" style={{ display: 'block', marginBottom: 12 }}>
+              一次写入条件开关和对应字段。隐藏中的字段同样能赋值，切到该条件后从 pending 显示。
+            </Text>
+            <AssignButtons
+              items={[
+                {
+                  label: '填入完整个人示例',
+                  fields: [
+                    { name: 'contactType', value: 'email' },
+                    { name: 'email', value: 'zhangsan@example.com' },
+                    { name: 'name', value: '张三' },
+                    { name: 'sameAsName', value: true },
+                    { name: 'nickname', value: '张三' },
+                    { name: 'userType', value: 'person' }
+                  ]
+                },
+                {
+                  label: '填入完整企业示例',
+                  fields: [
+                    { name: 'contactType', value: 'phone' },
+                    { name: 'phone', value: '13900139000' },
+                    { name: 'name', value: '李四' },
+                    { name: 'sameAsName', value: false },
+                    { name: 'userType', value: 'company' },
+                    { name: 'companyName', value: '李四科技' },
+                    { name: 'companyEmail', value: 'lisi@example.com' }
+                  ]
+                }
+              ]}
+            />
+          </Card>
+
+          <div style={{ marginTop: 16 }}>
+            <Space>
+              <SubmitButton>提交</SubmitButton>
+              <ResetButton />
+            </Space>
+          </div>
+        </ReactForm>
+      </Card>
+    </div>
+  );
+};
+
+render(<BaseExample />);
+
+```
+
+- 修复确认
+- 确认 onFormDataChange / onReady、data 引用、defaultLength、增删不改外部 data、getFormData 实时、动态 associations
+- _ReactForm(@kne/current-lib_react-form),antd(antd)
+
+```jsx
+const { default: ReactForm, useField, useSubmit, useReset, useFormApi, GroupList } = _ReactForm;
+const { useEffect, useRef, useState } = React;
+const { Button, Space, Card, Input: AntInput, Select: AntSelect, Tag, Typography, message, Alert } = antd;
+const { Text } = Typography;
+
+const Input = props => {
+  const fieldProps = useField(props);
+  return (
+    <div style={{ marginBottom: 12 }}>
+      <div style={{ marginBottom: 4 }}>
+        <Text>{fieldProps.label}</Text>
+      </div>
+      <AntInput
+        {...fieldProps.associationOptions}
+        value={fieldProps.value || ''}
+        onChange={e => fieldProps.onChange(e.target.value)}
+        onBlur={fieldProps.triggerValidate}
+        style={{ width: 220 }}
+      />
+    </div>
+  );
+};
+
+const SubmitButton = ({ children }) => {
+  const { isLoading, onClick } = useSubmit();
+  return (
+    <Button type="primary" onClick={onClick} loading={isLoading}>
+      {children}
+    </Button>
+  );
+};
+
+const ResetButton = () => {
+  const { onClick } = useReset();
+  return <Button onClick={onClick}>重置</Button>;
+};
+
+const FormDataPreview = () => {
+  const { openApi, emitter } = useFormApi();
+  const [json, setJson] = useState(() => JSON.stringify(openApi.getFormData() || {}, null, 2));
+  useEffect(() => {
+    const sync = () => setJson(JSON.stringify(openApi.getFormData() || {}, null, 2));
+    const token = emitter.addListener('form:field:set-value', sync);
+    return () => token.remove();
+  }, [emitter, openApi]);
+  return (
+    <pre style={{ margin: 0, padding: 12, background: '#fafafa', borderRadius: 6, fontSize: 12 }}>{json}</pre>
+  );
+};
+
+const ReadyProbe = () => {
+  const { openApi } = useFormApi();
+  const [text, setText] = useState('尚未调用 onReady');
+  return (
+    <Space>
+      <Button
+        onClick={() => {
+          openApi.onReady(() => setText('已挂载，onReady 立即执行'));
+        }}>
+        挂载后再点 onReady
+      </Button>
+      <Text>{text}</Text>
+    </Space>
+  );
+};
+
+const DataRefCard = () => {
+  const [, setTick] = useState(0);
+  const [showExtra, setShowExtra] = useState(false);
+  const formRef = useRef(null);
+  const data = { extra: '来自 props' };
+  return (
+    <Card
+      type="inner"
+      title={
+        <Space>
+          4. data 仅引用变化不冲 init<Tag color="blue">晚挂载字段</Tag>
+        </Space>
+      }
+      style={{ marginBottom: 16 }}>
+      <Text type="secondary" style={{ display: 'block', marginBottom: 12 }}>
+        父组件每次点「重渲染」都会传入新的 data 对象，内容仍是「来自 props」。先 setFormData 再 forget pending，重渲染后显示晚挂载字段，应仍是 setFormData 的值。
+      </Text>
+      <ReactForm ref={formRef} data={data}>
+        <Space wrap style={{ marginBottom: 12 }}>
+          <Button onClick={() => formRef.current.setFormData({ extra: '来自 setFormData' })}>setFormData</Button>
+          <Button onClick={() => formRef.current.forgetField({ name: 'extra' })}>forget pending</Button>
+          <Button onClick={() => setTick(x => x + 1)}>父组件重渲染</Button>
+          <Button type="primary" onClick={() => setShowExtra(true)}>
+            显示晚挂载字段
+          </Button>
+        </Space>
+        {showExtra ? <Input name="extra" label="extra（晚挂载）" /> : <Alert type="info" message="字段尚未挂载" />}
+      </ReactForm>
+    </Card>
+  );
+};
+
+const DefaultLengthCard = () => {
+  const formRef = useRef(null);
+  const listRef = useRef(null);
+  return (
+    <Card
+      type="inner"
+      title={
+        <Space>
+          5. defaultLength 不垫短数组<Tag color="green">1 条不被垫成 2 条</Tag>
+        </Space>
+      }
+      style={{ marginBottom: 16 }}>
+      <Text type="secondary" style={{ display: 'block', marginBottom: 12 }}>
+        GroupList defaultLength=2，点按钮写入 1 条数据后应只显示 1 项。
+      </Text>
+      <ReactForm ref={formRef}>
+        <Button
+          style={{ marginBottom: 12 }}
+          onClick={() => formRef.current.setFormData({ users: [{ name: '仅一条' }] })}>
+          setFormData 1 条
+        </Button>
+        <GroupList ref={listRef} name="users" defaultLength={2} reverseOrder={false}>
+          {({ index, onRemove }) => (
+            <Space key={index} style={{ display: 'flex', marginBottom: 8 }}>
+              <Tag>项 {index + 1}</Tag>
+              <Input name="name" label="名称" />
+              <Button size="small" danger onClick={onRemove}>
+                删除
+              </Button>
+            </Space>
+          )}
+        </GroupList>
+      </ReactForm>
+    </Card>
+  );
+};
+
+const PARENT_DATA = { users: [{ name: '张三' }, { name: '李四' }] };
+
+const SpliceCard = () => {
+  const listRef = useRef(null);
+  const [parentJson, setParentJson] = useState(() => JSON.stringify(PARENT_DATA, null, 2));
+  return (
+    <Card
+      type="inner"
+      title={
+        <Space>
+          6. 增删不改外部 data<Tag color="orange">clone 写回 init</Tag>
+        </Space>
+      }
+      style={{ marginBottom: 16 }}>
+      <Text type="secondary" style={{ display: 'block', marginBottom: 12 }}>
+        删除第一项后，左侧表单少一行；右侧外部 PARENT_DATA 仍是张三、李四。
+      </Text>
+      <ReactForm data={PARENT_DATA} onFormDataChange={() => setParentJson(JSON.stringify(PARENT_DATA, null, 2))}>
+        <div style={{ display: 'flex', gap: 16 }}>
+          <div style={{ flex: 1 }}>
+            <GroupList ref={listRef} name="users" defaultLength={0} reverseOrder={false}>
+              {({ index, onRemove }) => (
+                <Space key={index} style={{ display: 'flex', marginBottom: 8 }}>
+                  <Tag>项 {index + 1}</Tag>
+                  <Input name="name" label="名称" />
+                  <Button size="small" danger onClick={onRemove}>
+                    删除
+                  </Button>
+                </Space>
+              )}
+            </GroupList>
+          </div>
+          <pre style={{ flex: 1, margin: 0, padding: 12, background: '#fafafa', fontSize: 12 }}>{parentJson}</pre>
+        </div>
+      </ReactForm>
+    </Card>
+  );
+};
+
+const MemoizeCard = () => {
+  const [snapshot, setSnapshot] = useState('{}');
+  return (
+    <Card
+      type="inner"
+      title={
+        <Space>
+          7. getFormData 随输入更新<Tag color="purple">不再 memoize 旧 Map</Tag>
+        </Space>
+      }
+      style={{ marginBottom: 16 }}>
+      <Text type="secondary" style={{ display: 'block', marginBottom: 12 }}>
+        输入时右侧 JSON 应立刻变化。onFormDataChange 同一轮多次 set-value 会合并成一次。
+      </Text>
+      <ReactForm
+        onFormDataChange={formData => {
+          setSnapshot(JSON.stringify(formData, null, 2));
+        }}>
+        <Input name="title" label="标题" />
+        <Input name="count" label="数量" />
+        <pre style={{ marginTop: 8, padding: 12, background: '#fafafa', fontSize: 12 }}>{snapshot}</pre>
+      </ReactForm>
+    </Card>
+  );
+};
+
+const AssociationsCard = () => {
+  const [source, setSource] = useState('name');
+  return (
+    <Card
+      type="inner"
+      title={
+        <Space>
+          9. 动态 associations<Tag>改 fields 后跟随新源</Tag>
+        </Space>
+      }
+      style={{ marginBottom: 16 }}>
+      <Text type="secondary" style={{ display: 'block', marginBottom: 12 }}>
+        切换「跟随字段」后，改对应源字段，昵称应抄新源，不再跟旧源。
+      </Text>
+      <ReactForm>
+        <Space style={{ marginBottom: 12 }}>
+          <Text>跟随</Text>
+          <AntSelect
+            value={source}
+            style={{ width: 160 }}
+            onChange={setSource}
+            options={[
+              { label: '名称', value: 'name' },
+              { label: '备注', value: 'remark' }
+            ]}
+          />
+        </Space>
+        <Input name="name" label="名称" />
+        <Input name="remark" label="备注" />
+        <Input
+          name="nickname"
+          label="昵称"
+          associations={{
+            fields: [{ name: source }],
+            callback: ({ target, origin, openApi }) => {
+              openApi.setFieldValue(target, origin.value);
+            }
+          }}
+        />
+      </ReactForm>
+    </Card>
+  );
+};
+
+const BaseExample = () => {
+  const [changeLog, setChangeLog] = useState('尚未变化');
+  return (
+    <div style={{ padding: 24, background: '#f5f5f5', minHeight: '100vh' }}>
+      <Card title="修复确认示例" bordered={false}>
+        <Card
+          type="inner"
+          title={
+            <Space>
+              1 / 2. onFormDataChange 与 onReady<Tag color="cyan">已挂载立即回调</Tag>
+            </Space>
+          }
+          style={{ marginBottom: 16 }}>
+          <ReactForm
+            onFormDataChange={formData => {
+              setChangeLog(JSON.stringify(formData));
+            }}
+            onSubmit={data => message.success(JSON.stringify(data))}>
+            <Input name="name" label="名称" />
+            <ReadyProbe />
+            <div style={{ margin: '12px 0' }}>
+              <Text type="secondary">onFormDataChange：</Text>
+              <Text code>{changeLog}</Text>
+            </div>
+            <FormDataPreview />
+            <Space style={{ marginTop: 12 }}>
+              <SubmitButton>提交</SubmitButton>
+              <ResetButton />
+            </Space>
+          </ReactForm>
+        </Card>
+
+        <DataRefCard />
+        <DefaultLengthCard />
+        <SpliceCard />
+        <MemoizeCard />
+        <AssociationsCard />
+      </Card>
+    </div>
+  );
+};
+
+render(<BaseExample />);
+
+```
+
 - 远程验证规则
 - 自定义远程异步验证规则，模拟接口调用进行字段校验
 - _ReactForm(@kne/current-lib_react-form),antd(antd)
@@ -2481,7 +3226,7 @@ render(<ZeroValueExample />);
 
 | 属性名 | 说明 | 类型 | 默认值 |
 |-----|----|----|-----|
-| data | 表单初始值 | object | {} |
+| data | 表单初始值（只影响尚未挂载的字段；不会重放已挂载字段）。按**内容**比较，仅引用变化且内容相同不重置 initFormData | object | {} |
 | rules | 自定义验证规则 | object | {} |
 | interceptors | 表单拦截器配置 | object | {} |
 | debug | 是否开启调试模式 | boolean | false |
@@ -2489,7 +3234,7 @@ render(<ZeroValueExample />);
 | onPrevSubmit | 提交前回调 | function(values, form) | - |
 | onSubmit | 提交回调 | function(values) | Promise |
 | onError | 错误回调 | function(errors) | - |
-| onFormDataChange | 表单数据变化回调 | function(formData) | - |
+| onFormDataChange | 表单数据变化回调（同一轮多次值变更合并为一次；参数为当前已挂载字段汇总） | function(formData) | - |
 | children | 表单内容 | React.ReactNode | - |
 
 ##### Ref 暴露的方法
@@ -2512,8 +3257,12 @@ render(<ZeroValueExample />);
 | getFields | 获取匹配的字段列表 | (target) | Field[] |
 | validateField | 验证指定字段 | (target) | void |
 | validateAll | 验证所有字段 | - | void |
-| onReady | 表单就绪回调 | callback | - |
-| onDestroy | 表单销毁回调 | callback | - |
+| onReady | 表单就绪回调（若已 mount 则立即执行） | callback | - |
+| onDestroy | 表单销毁回调（若已卸载则立即执行） | callback | - |
+| forgetField | 清除某字段 pending，重建时不回填 | (target) | void |
+| forgetFields | 批量 forget | (targets) | void |
+| registerDeclaredPaths | FieldList 登记声明 path（内部） | (sourceId, paths) | void |
+| unregisterDeclaredPaths | 取消声明源（内部） | (sourceId) | void |
 
 #### useField Hook API
 
@@ -2525,10 +3274,11 @@ render(<ZeroValueExample />);
 | label | 字段标签 | string | - |
 | rule | 验证规则字符串 | string | - |
 | interceptor | 字段拦截器配置 | object | {} |
-| associations | 字段关联配置 | object | {} |
+| associations | 字段关联配置（`fields` 变化会同步到已挂载字段；callback 始终读最新） | object | {} |
 | noTrim | 是否不自动去空格 | boolean | false |
 | debounce | 防抖延迟时间 | number | 0 |
 | defaultValue | 默认值 | any | - |
+| preserve | 卸载时是否写入 pending 以便重建回填，默认 true | boolean | true |
 | errMsg | 自定义错误信息 | string | - |
 | onChange | 值变化回调 | function(value) | - |
 
@@ -2604,7 +3354,7 @@ render(<ZeroValueExample />);
 | 属性名 | 说明 | 类型 | 默认值 |
 |-----|----|----|-----|
 | name | 分组列表名称 | string | - |
-| defaultLength | 初始分组数量 | number | 1 |
+| defaultLength | 没有数组时的初始条数；已有数组（含空数组）以数组长度为准，不再垫长 | number | 1 |
 | empty | 空列表时显示的内容 | ReactNode | - |
 | reverseOrder | 是否倒序显示 | boolean | true |
 | children | 渲染函数 | function | - |
@@ -2664,3 +3414,25 @@ interceptors.output.use('formatDate', value => {
   return value ? new Date(value).toISOString() : value;
 });
 ```
+
+#### 赋值与字段重建
+
+- `setField` / `setFormData` 会写入 pending。字段尚未注册或仍处于 PRE_INIT 时不会丢弃；挂载后按 **pending > data 初值 > defaultValue** 回填。
+- 字段卸载时（`preserve !== false`）把当前值写入 pending。React key 变化导致的重建会回填；`getFormData` 仍只汇总**当前已挂载**字段。
+- FieldList 会把未 `filter` 的 list（含 `display={false}` / `hidden`）登记为声明 path。pending 里有、声明和挂载都没有的 path，对账后 forget（从 list 里 spread 掉或 GroupList 删除）。
+- 类型切换后必须清空下游时，在 `onChange` 里调用 `forgetField` / `setField({ name, value: undefined })`，不要依赖卸载推断。
+- `hidden`：仍在声明内，值保留。`display={false}`：仍在声明内，再显示能回填。从 list 删除：离开声明，forget。
+- `reset` 与 Form 卸载会清空 pending。`debug` 下 `setField` 未匹配到字段且**没有**写入 pending 时才会 `console.warn`。
+
+稳定性单测（`src/__tests__`，入口 `npm test`）：
+
+- `createSetFieldsEvent`：未注册 / PRE_INIT / ready / falsy / 分组 path / debug 写入 pending 不 warn
+- `FormEvent` / `useOpenApi`：onFormDataChange 合并触发；已 mount 的 onReady 立即回调
+- `formFixes`：data 仅引用变化不重置 init
+- `GroupList`：defaultLength 不垫短数组；增删 clone 写回 init、不 splice 原数组
+- `Field`：computedFormDataFormState / stateToError 同一 Map 原地改值可读到新值
+- `associations` / `useFieldInit` / `createFieldChangeEvent`：空 fields 不匹配；fields 变化后同步
+- `createFieldRemoveEvent`：preserve 默认写入 pending、`preserve={false}`、已 forget 不再写回
+- `createForgetGroupEvent` / `createResetEvent`
+- `fieldAssignLifecycle`：先 setField 后挂载、同 path 卸载再挂、声明消失、forget 后不回填
+- `pendingFormData`：对账、forgetByPrefix、mergeFormData

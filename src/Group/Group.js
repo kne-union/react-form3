@@ -4,13 +4,14 @@ import { useFormContext } from '../formContext';
 import groupKey from '../core/groupKey';
 import get from 'lodash/get';
 
-const Group = ({ id, name, children, defaultValue }) => {
+const Group = ({ id, name, children, defaultValue, index: indexProp }) => {
   const { group } = useFormContext();
   const { id: parentId, index: parentIndex, name: parentName } = useGroupContext();
 
-  const index = useMemo(() => {
+  const indexFromState = useMemo(() => {
     return get(group, groupKey(parentId, name), []).findIndex(item => item.id === id);
   }, [id, parentId, group, name]);
+  const index = Number.isInteger(indexProp) ? indexProp : indexFromState;
 
   const groupName = useMemo(() => {
     if (index > -1 && parentName) {

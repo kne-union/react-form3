@@ -3,7 +3,6 @@ import get from 'lodash/get';
 import isNil from 'lodash/isNil';
 import clone from 'lodash/clone';
 import transform from 'lodash/transform';
-import memoize from 'lodash/memoize';
 import set from 'lodash/set';
 import ruleValidate from './ruleValidate';
 import compileErrMsg from './compileErrMsg';
@@ -21,7 +20,7 @@ export const FORM_FIELD_VALIDATE_STATE_ENUM = {
 };
 
 class Field {
-  static stateToError = memoize(formState => {
+  static stateToError = formState => {
     return Array.from(formState.values())
       .filter(field => {
         return get(field, 'validate.status') === FORM_FIELD_VALIDATE_STATE_ENUM.ERROR;
@@ -36,7 +35,7 @@ class Field {
           errMsg: field.getErrMsg()
         });
       });
-  });
+  };
 
   constructor({ id, name, associations, formInterceptor, options }) {
     this.id = id;
@@ -94,11 +93,12 @@ class Field {
         return false;
       }
 
-      if (!field.associations.fields && field.associations.fields.length > 0) {
+      const associationFields = field.associations && field.associations.fields;
+      if (!associationFields || associationFields.length === 0) {
         return false;
       }
 
-      return field.associations.fields.some(token => Field.matchField(target, token));
+      return associationFields.some(token => Field.matchField(target, token));
     });
   };
 
@@ -113,7 +113,7 @@ class Field {
     return options.name;
   };
 
-  static computedFormDataFormState = memoize(state => {
+  static computedFormDataFormState = state => {
     return transform(
       Array.from(state.values()),
       (result, field) => {
@@ -125,10 +125,10 @@ class Field {
       },
       {}
     );
-  });
-  static computedFieldValueFromFormData = memoize((field, formData) => {
+  };
+  static computedFieldValueFromFormData = (field, formData) => {
     return get(formData, Field.getFieldValuePath(field));
-  });
+  };
 
   static stateToIsPass = formState => {
     return Array.from(formState.values()).every(field => {
@@ -136,7 +136,7 @@ class Field {
     });
   };
 
-  setInfo({ groupName, groupIndex, label, rule, interceptor, noTrim, fieldRef, errMsg }) {
+  setInfo({ groupName, groupIndex, label, rule, interceptor, noTrim, fieldRef, errMsg, preserve, associations }) {
     this.groupName = groupName;
     this.groupIndex = groupIndex;
     this.label = label;
@@ -145,8 +145,15 @@ class Field {
     this.noTrim = noTrim;
     this.fieldRef = fieldRef;
     this.errMsg = errMsg;
+    this.preserve = preserve !== false;
     this.state = FORM_FIELD_STATE_ENUM.INIT;
     this.path = Field.getFieldValuePath(this);
+    if (associations) {
+      this.associations = {
+        fields: get(associations, 'fields', []).filter(item => !!item.name),
+        callback: get(associations, 'callback', this.associations.callback)
+      };
+    }
     return this;
   }
 

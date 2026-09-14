@@ -1,5 +1,6 @@
 import createFieldChangeEvent from '../Form/event/createFieldChangeEvent';
 import Field, { FORM_FIELD_STATE_ENUM, FORM_FIELD_VALIDATE_STATE_ENUM } from '../core/Field';
+import { createPendingStore } from '../core/pendingFormData';
 
 const defaultInterceptor = {
   input: ({ value }) => value,
@@ -10,13 +11,14 @@ const defaultInterceptor = {
 // 辅助函数：构建 formContextRef mock
 // ========================================
 
-const createMockFormContext = (initFormData = {}) => {
+const createMockFormContext = (initFormData = {}, pendingStore) => {
   const formState = new Map();
   const listeners = {};
 
   const formContextRef = {
     current: {
       initFormData,
+      pendingStore,
       interceptor: defaultInterceptor,
       getFormState: () => formState,
       setFormState: updater => {
@@ -243,5 +245,104 @@ describe('createFieldChangeEvent', () => {
     });
 
     expect(formContextRef.current.emitter.emit).toHaveBeenCalledWith('form-field:input:f1', { value: 0 });
+  });
+
+  test('pending 优先于 initFormData 与 defaultValue', async () => {
+    const pendingStore = createPendingStore();
+    pendingStore.setPath('name', '来自pending');
+    const { formContextRef, formState } = createMockFormContext({ name: '来自data' }, pendingStore);
+    const fieldChangeEvent = createFieldChangeEvent(formContextRef);
+
+    const field = new Field({ id: 'f1', name: 'name', formInterceptor: defaultInterceptor });
+    formState.set('f1', field);
+
+    await fieldChangeEvent({
+      id: 'f1',
+      name: 'name',
+      label: '名称',
+      defaultValue: '默认值',
+      rule: 'REQ',
+      interceptor: null,
+      noTrim: false,
+      fieldRef: null,
+      errMsg: ''
+    });
+
+    expect(formState.get('f1').value).toBe('来自pending');
+  });
+
+  test('空 pending 不挡住 initFormData（基本示例 data 初值）', async () => {
+    const pendingStore = createPendingStore();
+    const { formContextRef, formState } = createMockFormContext({ name: '哈哈哈' }, pendingStore);
+    const fieldChangeEvent = createFieldChangeEvent(formContextRef);
+    const field = new Field({ id: 'f1', name: 'name', formInterceptor: defaultInterceptor });
+    formState.set('f1', field);
+
+    await fieldChangeEvent({
+      id: 'f1',
+      name: 'name',
+      label: '名称',
+      rule: 'REQ LEN-0-10',
+      interceptor: null,
+      noTrim: false,
+      fieldRef: null,
+      errMsg: ''
+    });
+
+    expect(formState.get('f1').value).toBe('哈哈哈');
+  });
+
+  test('forget 后同 path 再挂载不回填 pending', async () => {
+    const pendingStore = createPendingStore();
+    pendingStore.setPath('name', '旧值');
+    pendingStore.forget('name');
+    const { formContextRef, formState } = createMockFormContext({}, pendingStore);
+    const fieldChangeEvent = createFieldChangeEvent(formContextRef);
+
+    const field = new Field({ id: 'f1', name: 'name', formInterceptor: defaultInterceptor });
+    formState.set('f1', field);
+
+    await fieldChangeEvent({
+      id: 'f1',
+      name: 'name',
+      label: '名称',
+      defaultValue: '默认值',
+      rule: 'REQ',
+      interceptor: null,
+      noTrim: false,
+      fieldRef: null,
+      errMsg: ''
+    });
+
+    expect(formState.get('f1').value).toBe('默认值');
+  });
+
+  test('change 时更新 associations.fields', async () => {
+    const { formContextRef, formState } = createMockFormContext();
+    const fieldChangeEvent = createFieldChangeEvent(formContextRef);
+    const callback = jest.fn();
+    const field = new Field({
+      id: 'f1',
+      name: 'nickname',
+      formInterceptor: defaultInterceptor,
+      associations: { fields: [{ name: 'old' }], callback }
+    });
+    formState.set('f1', field);
+
+    await fieldChangeEvent({
+      id: 'f1',
+      name: 'nickname',
+      label: '昵称',
+      associations: { fields: [{ name: 'name' }], callback }
+    });
+
+    const origin = new Field({ id: 'name', name: 'name', formInterceptor: defaultInterceptor });
+    origin.setInfo({ groupName: null, groupIndex: null, label: '名称' });
+    formState.set('name', origin);
+
+    const matched = Field.matchAssociationFields(formState, origin);
+    expect(matched).toHaveLength(1);
+    expect(matched[0].id).toBe('f1');
+    expect(formState.get('f1').associations.fields).toEqual([{ name: 'name' }]);
   });
 });

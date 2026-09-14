@@ -107,6 +107,36 @@
       ]
     },
     {
+      "title": "联动显示与赋值",
+      "description": "根据表单数据条件显示字段；用按钮一次 setFields 给不同条件的字段整体赋值",
+      "code": "./linkage.js",
+      "scope": [
+        {
+          "name": "_ReactForm",
+          "packageName": "@kne/current-lib_react-form"
+        },
+        {
+          "name": "antd",
+          "packageName": "antd"
+        }
+      ]
+    },
+    {
+      "title": "修复确认",
+      "description": "确认 onFormDataChange / onReady、data 引用、defaultLength、增删不改外部 data、getFormData 实时、动态 associations",
+      "code": "./fix-confirm.js",
+      "scope": [
+        {
+          "name": "_ReactForm",
+          "packageName": "@kne/current-lib_react-form"
+        },
+        {
+          "name": "antd",
+          "packageName": "antd"
+        }
+      ]
+    },
+    {
       "title": "远程验证规则",
       "description": "自定义远程异步验证规则，模拟接口调用进行字段校验",
       "code": "./remote-rule.js",
