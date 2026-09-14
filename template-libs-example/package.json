@@ -14,6 +14,10 @@
     "start": "cross-env PORT=3020 MODULES_DEV_PUBLIC_URL=/ craco start",
     "build": "cross-env COMPONENTS_NAME=react-form MODULES_DEV_PUBLIC_URL=/react-form3  craco build"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kne-union/react-form3.git"
+  },
   "eslintConfig": {
     "extends": [
       "react-app",
