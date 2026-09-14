@@ -1,8 +1,10 @@
 import { useMemo } from 'react';
 import Field from '../core/Field';
+import { collectMountedPaths } from '../core/pendingFormData';
 
-const useOpenApi = ({ formStateRef, emitter }) => {
+const useOpenApi = ({ formStateRef, emitter, pendingStoreRef, mountStatusRef }) => {
   return useMemo(() => {
+    const getPendingStore = () => pendingStoreRef && pendingStoreRef.current;
     return {
       emitter,
       submit: (...args) => {
@@ -27,11 +29,22 @@ const useOpenApi = ({ formStateRef, emitter }) => {
         emitter.emit('form:reset');
       },
       onReady(callback) {
+        if (mountStatusRef && mountStatusRef.current === 'mounted') {
+          callback && callback();
+          return;
+        }
+        if (mountStatusRef && mountStatusRef.current === 'destroyed') {
+          return;
+        }
         emitter.addListener('form:mount', () => {
           callback && callback();
         });
       },
       onDestroy(callback) {
+        if (mountStatusRef && mountStatusRef.current === 'destroyed') {
+          callback && callback();
+          return;
+        }
         emitter.addListener('form:unmount', () => {
           callback && callback();
         });
@@ -91,9 +104,37 @@ const useOpenApi = ({ formStateRef, emitter }) => {
             }
           })
         );
+      },
+      forgetField({ name, groupName, groupIndex } = {}) {
+        const path = Field.getFieldValuePath({ name, groupName, groupIndex });
+        const pendingStore = getPendingStore();
+        pendingStore && pendingStore.forget(path);
+      },
+      forgetFields(list) {
+        (Array.isArray(list) ? list : [list]).forEach(item => {
+          const path = typeof item === 'string' ? item : Field.getFieldValuePath(item || {});
+          const pendingStore = getPendingStore();
+          pendingStore && pendingStore.forget(path);
+        });
+      },
+      registerDeclaredPaths(sourceId, paths) {
+        const pendingStore = getPendingStore();
+        if (!pendingStore) {
+          return;
+        }
+        pendingStore.registerDeclaredPaths(sourceId, paths);
+        pendingStore.reconcile(collectMountedPaths(formStateRef.current));
+      },
+      unregisterDeclaredPaths(sourceId) {
+        const pendingStore = getPendingStore();
+        if (!pendingStore) {
+          return;
+        }
+        pendingStore.unregisterDeclaredPaths(sourceId);
+        pendingStore.reconcile(collectMountedPaths(formStateRef.current));
       }
     };
-  }, [formStateRef, emitter]);
+  }, [formStateRef, emitter, pendingStoreRef, mountStatusRef]);
 };
 
 export default useOpenApi;

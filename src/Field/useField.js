@@ -6,11 +6,26 @@ import useFieldEvent from './useFieldEvent';
 import get from 'lodash/get';
 import Field from '../core/Field';
 
-const useField = ({ name, rule, label, interceptor, associations, noTrim, debounce: time = 0, onChange, defaultValue, errMsg, ...args }) => {
+const useField = ({ name, rule, label, interceptor, associations, noTrim, debounce: time = 0, onChange, defaultValue, errMsg, preserve, ...args }) => {
   const id = useId();
   const { index: groupIndex, name: groupName, defaultValue: defaultGroupValue } = useGroup();
-  const { formState } = useFormContext();
+  const { formState, initFormData, getInitFormData, pendingStore } = useFormContext();
   const [associationOptions, setAssociationOptions] = useState({});
+  const fieldDefaultValue = get(defaultGroupValue, name) ?? defaultValue;
+  const path = Field.getFieldValuePath({ name, groupName, groupIndex });
+  const seedValue = (() => {
+    const source = typeof getInitFormData === 'function' ? getInitFormData() : initFormData;
+    const groupList = groupName && source ? get(source, groupName) : null;
+    const inRange = !Array.isArray(groupList) || groupIndex == null || groupIndex < 0 || groupIndex < groupList.length;
+    if (inRange && pendingStore && pendingStore.hasPath(path)) {
+      return pendingStore.getPath(path);
+    }
+    const fromInit = source ? get(source, path) : undefined;
+    if (inRange && fromInit !== undefined && fromInit !== null) {
+      return fromInit;
+    }
+    return fieldDefaultValue;
+  })();
 
   const fieldRef = useFieldInit({
     name,
@@ -24,13 +39,14 @@ const useField = ({ name, rule, label, interceptor, associations, noTrim, deboun
       }
     },
     noTrim,
-    defaultValue: get(defaultGroupValue, name) ?? defaultValue,
+    defaultValue: fieldDefaultValue,
     id,
     groupName,
     groupIndex,
-    errMsg
+    errMsg,
+    preserve
   });
-  const { validate, isValueChanged, dataChange, value } = useFieldEvent({ id, time, onChange });
+  const { validate, isValueChanged, dataChange, value } = useFieldEvent({ id, time, onChange, defaultValue: seedValue });
   const field = formState.get(id),
     formData = Field.computedFormDataFormState(formState);
   const outputProps = {

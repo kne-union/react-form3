@@ -48,7 +48,7 @@ Form 通过 Provider 将表单的核心能力传递给子组件，包括：
 - `formIsMount` - 表单挂载状态
 - `rules` - 验证规则集合，包含内置规则和自定义规则
 - `interceptor` - 拦截器配置
-- `onSubmit` / `onError` - 提交和错误回调
+- `onSubmit` / `onError` / `onFormDataChange` - 提交、错误与数据变化回调
 
 ### Provider 层次结构
 
@@ -330,6 +330,8 @@ callback: ({ target, origin, openApi, data }) => {
 3. **数值计算** - 基于多个字段的值进行计算
 4. **分组字段聚合** - 对分组内的多个字段值进行汇总
 
+条件显示与赋值见 `linkage.js`：用 `useWatch` 订阅 `form:field:set-value` 后条件渲染字段；显示时用 `setField` 赋值（未挂载会写入 pending），显示后继续用 `associations` 跟随源字段。
+
 ## 拦截器
 
 ### 拦截器类型
@@ -482,7 +484,7 @@ const { openApi } = useFormApi();
 | **错误处理** | `errors` | 获取所有错误信息 |
 | **表单控制** | `submit()` | 提交表单 |
 | | `reset()` | 重置表单 |
-| | `onReady()` | 表单就绪回调 |
+| | `onReady()` | 表单就绪回调（已 mount 则立即执行） |
 | | `onDestroy()` | 表单销毁回调 |
 
 ## 事件系统
@@ -551,7 +553,7 @@ formApiRef.current.onDestroy(() => {
 | 阶段 | 触发时机 | 执行操作 |
 |------|---------|---------|
 | 挂载 | Form 组件首次渲染 | - 初始化 formState (Map 结构)<br>- 创建事件发射器<br>- 初始化 openApi<br>- 设置初始数据<br>- 绑定事件监听器 |
-| 更新 | Form 组件属性变化 | - 更新 rules 配置<br>- 更新 interceptors 配置<br>- 处理 data 变化 |
+| 更新 | Form 组件属性变化 | - 更新 rules 配置<br>- 更新 interceptors 配置<br>- data 只更新后挂载字段的初始值，不重放已挂载字段 |
 | 卸载 | Form 组件销毁 | - 清理所有事件监听器<br>- 清理异步任务<br>- 释放内存资源 |
 
 ### 字段生命周期

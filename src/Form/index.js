@@ -1,5 +1,6 @@
 import React, { useState, useRef, forwardRef, useImperativeHandle } from 'react';
 import cloneDeep from 'lodash/cloneDeep';
+import isEqual from 'lodash/isEqual';
 import { Provider } from '../formContext';
 import FormEvent from './FormEvent';
 import FormApiProvider from './FormApiProvider';
@@ -9,22 +10,28 @@ import useEvent from '@kne/use-event';
 import useFormTask from './useFormTask';
 import useOpenApi from './useOpenApi';
 import RULES from '../core/RULES';
+import { createPendingStore } from '../core/pendingFormData';
 
 const Form = forwardRef(({ data, rules, interceptors, debug, noFilter, onPrevSubmit, onSubmit, onError, onFormDataChange, children }, ref) => {
   const [formState, setFormState] = useState(new Map());
   const formStateRef = useRef(formState);
+  const pendingStoreRef = useRef(null);
+  if (!pendingStoreRef.current) {
+    pendingStoreRef.current = createPendingStore();
+  }
   const [formIsMount, setFormIsMount] = useState(false);
+  const mountStatusRef = useRef('pending');
   const task = useFormTask();
   const emitter = useEvent({ debug, name: 'react-form3' });
   const { group, setGroup } = useFormGroup();
-  const openApi = useOpenApi({ emitter, formStateRef });
+  const openApi = useOpenApi({ emitter, formStateRef, pendingStoreRef, mountStatusRef });
   const interceptor = useInterceptors({ interceptors });
   useImperativeHandle(ref, () => openApi, [openApi]);
 
-  // setFormData 会同步写入；props.data 变化时与之对齐。供后挂载的 GroupList/字段读取。
+  // setFormData 会同步写入；props.data 按内容对齐（仅引用变化不重置 init）。
   const propsDataRef = useRef(data);
   const initFormDataRef = useRef(cloneDeep(data || {}));
-  if (data !== propsDataRef.current) {
+  if (!isEqual(data || {}, propsDataRef.current || {})) {
     propsDataRef.current = data;
     initFormDataRef.current = cloneDeep(data || {});
   }
@@ -47,9 +54,11 @@ const Form = forwardRef(({ data, rules, interceptors, debug, noFilter, onPrevSub
         },
         formIsMount,
         setFormIsMount,
+        mountStatusRef,
         group,
         setGroup,
         initFormData: initFormDataRef.current,
+        pendingStore: pendingStoreRef.current,
         getInitFormData: () => initFormDataRef.current,
         setInitFormData: next => {
           initFormDataRef.current = next && typeof next === 'object' ? next : {};

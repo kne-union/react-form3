@@ -1,4 +1,5 @@
 import getFieldUtils from '../../core/getFieldUtils';
+import get from 'lodash/get';
 
 const createFieldChangeEvent =
   formContextRef =>
@@ -12,8 +13,16 @@ const createFieldChangeEvent =
           return;
         }
         const source = typeof getInitFormData === 'function' ? getInitFormData() : initFormData;
+        const groupList = field.groupName && source ? get(source, field.groupName) : null;
+        const beyondList = Array.isArray(groupList) && field.groupIndex != null && field.groupIndex >= groupList.length;
+        const pendingStore = formContextRef.current.pendingStore;
+        const pendingValue = pendingStore && pendingStore.getValueForField(field);
+        if (!beyondList && pendingValue && pendingValue.found) {
+          field.setFieldValue(pendingValue.value);
+          return;
+        }
         const fieldInitData = field.getValueFromFormData(source);
-        if (fieldInitData !== undefined && fieldInitData !== null) {
+        if (!beyondList && fieldInitData !== undefined && fieldInitData !== null) {
           field.setFieldValue(fieldInitData);
           return;
         }

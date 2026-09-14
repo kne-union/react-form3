@@ -1,4 +1,5 @@
 import Field, { FORM_FIELD_STATE_ENUM, FORM_FIELD_VALIDATE_STATE_ENUM } from '../core/Field';
+import RULES from '../core/RULES';
 
 const defaultInterceptor = {
   input: ({ value }) => value,
@@ -199,6 +200,12 @@ describe('Field getFieldValue / getValueFromFormData', () => {
     const formData = { other: 'value' };
     expect(field.getValueFromFormData(formData)).toBeUndefined();
   });
+
+  test('getValueFromFormData 不按字段实例缓存，换 data 能读到新值', () => {
+    const field = createReadyField();
+    expect(field.getValueFromFormData({})).toBeUndefined();
+    expect(field.getValueFromFormData({ username: '哈哈哈' })).toBe('哈哈哈');
+  });
 });
 
 // ========================================
@@ -274,8 +281,26 @@ describe('Field setValidateStatus', () => {
 });
 
 // ========================================
-// clone
+// runValidate / clone
 // ========================================
+
+describe('Field runValidate', () => {
+  test('规则通过设为 PASS', async () => {
+    const field = createReadyField();
+    field.rule = 'REQ';
+    field.setValue('ok');
+    await field.runValidate(RULES, () => ({}));
+    expect(field.validate.status).toBe(FORM_FIELD_VALIDATE_STATE_ENUM.PASS);
+  });
+
+  test('规则失败设为 ERROR', async () => {
+    const field = createReadyField();
+    field.rule = 'REQ';
+    field.setValue('');
+    await field.runValidate(RULES, () => ({}));
+    expect(field.validate.status).toBe(FORM_FIELD_VALIDATE_STATE_ENUM.ERROR);
+  });
+});
 
 describe('Field clone', () => {
   test('clone 产生独立副本', () => {
@@ -321,6 +346,13 @@ describe('Field 静态方法', () => {
   test('findField 未找到返回 undefined', () => {
     const result = Field.findField(formState, { name: 'notexist' });
     expect(result).toBeUndefined();
+  });
+
+  test('findField 按 groupName + groupIndex 查找', () => {
+    const grouped = createField({ id: 'field-3', name: 'title' });
+    grouped.setInfo({ groupName: 'users', groupIndex: 1, label: 'title' });
+    formState.set('field-3', grouped);
+    expect(Field.findField(formState, { name: 'title', groupName: 'users', groupIndex: 1 }).id).toBe('field-3');
   });
 
   // matchField
@@ -377,5 +409,22 @@ describe('Field 静态方法', () => {
     const errors = Field.stateToError(formState);
     expect(errors.length).toBe(1);
     expect(errors[0].name).toBe('username');
+  });
+
+  test('computedFormDataFormState 同一 Map 原地改值后读到新值', () => {
+    const field = createReadyField();
+    field.setValue('a');
+    const state = new Map([[field.id, field]]);
+    expect(Field.computedFormDataFormState(state)).toEqual({ username: 'a' });
+    field.setValue('b');
+    expect(Field.computedFormDataFormState(state)).toEqual({ username: 'b' });
+  });
+
+  test('stateToError 同一 Map 原地改校验后读到新错误', () => {
+    const field = createReadyField();
+    const state = new Map([[field.id, field]]);
+    expect(Field.stateToError(state)).toEqual([]);
+    field.validate = { status: FORM_FIELD_VALIDATE_STATE_ENUM.ERROR, msg: '必填' };
+    expect(Field.stateToError(state)[0].msg).toBe('必填');
   });
 });
