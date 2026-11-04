@@ -165,6 +165,21 @@
           "packageName": "antd"
         }
       ]
+    },
+    {
+      "title": "大表单性能压测",
+      "description": "可切换字段数，实时统计单次输入触发的字段重渲染次数与 commit 耗时，对比反例写法与推荐写法",
+      "code": "./perf.js",
+      "scope": [
+        {
+          "name": "_ReactForm",
+          "packageName": "@kne/current-lib_react-form"
+        },
+        {
+          "name": "antd",
+          "packageName": "antd"
+        }
+      ]
     }
   ]
 }
